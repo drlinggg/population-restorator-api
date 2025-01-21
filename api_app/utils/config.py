@@ -1,18 +1,20 @@
-#todo desc
+# todo desc
 
 from dataclasses import dataclass
 
+
 @dataclass
 class UrbanApiConfig:
-    #todo desc
+    # todo desc
     host: str
     port: int
-    api_key: str   
-    base_path: str = '/api/v1'
+    api_key: str
+    base_path: str = "/api/v1"
+
 
 @dataclass
 class DBConfig:
-    #todo desc
+    # todo desc
     addr: str
     port: int
     name: str

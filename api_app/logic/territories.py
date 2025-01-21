@@ -1,6 +1,7 @@
 import abc
 
-class TerritoriesService():
+
+class TerritoriesService:
 
     @abc.abstractmethod
     def __init__(self):

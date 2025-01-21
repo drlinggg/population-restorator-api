@@ -1,15 +1,17 @@
 import httpx
 
+
 async def get_territories_tree(territory_id: int):
-    #todo return graph["territory"]
+    # todo return graph["territory"]
     url = f"{urban_api_config.host}{urban_api_config.base_path}/territories_without_geometry"
+    # todo mb save in another place
     params = {
         "parent_id": territory_id,
         "get_all_levels": True,
         "cities_only": False,
         "ordering": "asc",
         "page": 1,
-        "page_size": 10
+        "page_size": 10,
     }
 
     headers = {
@@ -25,4 +27,3 @@ async def get_territories_tree(territory_id: int):
 
     print(response.text)
     pass
-
