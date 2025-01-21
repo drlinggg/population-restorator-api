@@ -8,6 +8,7 @@ from api_app.logic.impl.territories import get_territories_service
                          )
 async def balance(territory_id: int):
     #todo desc
+    print(urban_api_config.HOST)
     territories_service: TerritoriesService = get_territories_service()
     await territories_service.balance(territory_id)
     return f"test {territory_id}"

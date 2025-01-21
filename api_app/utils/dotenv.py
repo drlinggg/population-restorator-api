@@ -3,7 +3,7 @@ Environment operation functions are defined here.
 """
 
 import os
-from .config import UrbanApiConfig
+from .config import UrbanApiConfig, DBConfig
 
 
 def try_load_envfile(envfile: str) -> bool:
@@ -26,9 +26,14 @@ def try_load_envfile(envfile: str) -> bool:
                 os.environ[name] = value.strip()
     return True
 
-def read_env() -> UrbanApiConfig:
+def read_api_env() -> UrbanApiConfig:
     return UrbanApiConfig(
-            host=os.getenv('host'),
-            port=int(os.getenv('port')),
-            api_key=os.getenv('api-key'),
+            host=os.getenv('HOST'),
+            port=int(os.getenv('PORT')),
+            api_key=os.getenv('API_KEY'),
            )
+
+def read_db_env() -> DBConfig:
+    #todo desc
+    #todo
+    return DBConfig("1","2","3","4","5","6")

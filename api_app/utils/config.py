@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 
 @dataclass
 class UrbanApiConfig:
+    #todo desc
     host: str
     port: int
     api_key: str   
@@ -12,6 +13,7 @@ class UrbanApiConfig:
 
 @dataclass
 class DBConfig:
+    #todo desc
     addr: str
     port: int
     name: str
