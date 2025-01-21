@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "population-restorator-api"
+version = "0.1.0"
+description = "todo"
+authors = ["Banakh Andrei <uuetsukeu@mail.ru>"]
+license = "MIT"
+readme = "README.md"
+packages = [{ include = "api_app" }]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+pandas = "^2.2.3"
+fastapi = "^0.115.6"
+uvicorn = "^0.34.0"
+httpx = "^0.28.1"
+python-dotenv = "^1.0.1"
+
+[tool.poetry.scripts]
+api = "api_app.__main__:main"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
