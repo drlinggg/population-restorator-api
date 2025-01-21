@@ -17,4 +17,3 @@ class TerritoriesService():
     @abc.abstractmethod
     async def restore(self, territory_id: int):
         """todo"""
-

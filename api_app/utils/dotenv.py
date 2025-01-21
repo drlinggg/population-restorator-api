@@ -5,7 +5,6 @@ Environment operation functions are defined here.
 import os
 from .config import UrbanApiConfig, DBConfig
 
-
 def try_load_envfile(envfile: str) -> bool:
     """
     Parse given file as envfile with PARAM=VALUE lines and set them to `os.env`.

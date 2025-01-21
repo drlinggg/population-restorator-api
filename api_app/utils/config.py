@@ -1,7 +1,6 @@
 #todo desc
 
-import os
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 @dataclass
 class UrbanApiConfig:
