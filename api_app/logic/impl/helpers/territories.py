@@ -1,7 +1,5 @@
 # todo desc
 
-import httpx
-
 from api_app.utils import urban_api_config
 
 from .requests import handle_request
@@ -12,7 +10,7 @@ async def get_territories_tree(territory_id: int):
 
     params = {
         "parent_id": territory_id,
-        "get_all_levels": True,
+        "get_all_levels": "True",
     }
 
     headers = {

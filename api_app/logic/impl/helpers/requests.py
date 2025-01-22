@@ -1,21 +1,22 @@
 # todo desc
 
-import httpx
+import aiohttp
 
 
 async def handle_request(
     url: str, params: dict[str, any], headers: dict[str, any]
-) -> httpx.request:
-    # todo desc
-    async with httpx.AsyncClient() as client:
-        response = await client.get(url, params=params, headers=headers)
+) -> aiohttp.ClientResponse:
+    async with aiohttp.ClientSession(headers=headers) as session:
+        async with session.get(url=url, params=params) as response:
+            #todo tobeunderstoodlater
+            response_text: str = str(await response.content.read())
+            print(response_text)  # Отладочная информация
 
-    # todo add debug mode here response.text
-    # todo add path not just the name
-    with open("test.gejson", "w", encoding="utf-8") as file:
-        file.write(response.text)
+            with open("test.gejson", "w", encoding="utf-8") as file:
+                file.write(response_text)
 
-    if response.status_code != 200:
-        raise HTTPException(status_code=response.status_code, detail=response.json())
-
-    return response
+            #todo change to trycatch
+            if response.status != 200:
+                raise HTTPException(status_code=response.status, detail=await response.json())
+            
+            return response

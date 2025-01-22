@@ -12,16 +12,17 @@ python = "^3.9"
 pandas = "^2.2.3"
 fastapi = "^0.115.6"
 uvicorn = "^0.34.0"
-httpx = "^0.28.1"
 python-dotenv = "^1.0.1"
 sqlalchemy = "^2.0.37"
 isort = "^5.13.2"
 pylint = "^3.3.3"
 black = "^24.10.0"
 geojson = "^3.2.0"
+click = "^8.1.8"
+aiohttp = "^3.11.11"
 
 [tool.poetry.scripts]
-population-restorator-api = "api_app.__main__:main"
+launch_population-restorator-api = "api_app.__main__:main"
 
 [build-system]
 requires = ["poetry-core"]
