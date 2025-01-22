@@ -10,7 +10,7 @@ def get_app(prefix: str = "/api") -> FastAPI:
     desc = "todo"
 
     app = FastAPI(
-        title="Population-restorator",
+        title="Population-restorator-api",
         description=desc,
         version="0.0.1",
         contact={"name": "Banakh Andrei", "email": "uuetsukeu@mail.ru"},

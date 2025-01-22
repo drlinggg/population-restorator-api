@@ -20,6 +20,7 @@ from .routers import territories_router
 async def balance(territory_id: int):
     # todo desc
     territories_service: TerritoriesService = get_territories_service()
+    # todo debug
     await territories_service.balance(territory_id)
     return TerritoryBalanceResponse(
         performed_at=get_current_time(), territory_id=territory_id

@@ -11,12 +11,12 @@ class TerritoriesService:
 
     @abc.abstractmethod
     async def balance(self, territory_id: int):
-        """todo"""
+        pass
 
     @abc.abstractmethod
     async def divide(self, territory_id: int):
-        """todo"""
+        pass
 
     @abc.abstractmethod
     async def restore(self, territory_id: int):
-        """todo"""
+        pass

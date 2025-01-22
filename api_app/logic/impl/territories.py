@@ -9,10 +9,9 @@ class TerritoriesServiceImpl(TerritoriesService):
 
     async def balance(self, territory_id: int):
         # todo
+        # debug f balance {id}
         print(f"balance {territory_id}")
-
-        # todo graphTerritories =
-
+        """geojson something = """
         await get_territories_tree(territory_id)
         pass
 
