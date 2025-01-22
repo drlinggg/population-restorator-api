@@ -4,4 +4,4 @@ from pydantic import BaseModel, Field
 
 
 class PingResponse(BaseModel):
-    message: str = Field(default="Pong!")
+    message: str = Field(default="Pong!", examples=["Pong!"])

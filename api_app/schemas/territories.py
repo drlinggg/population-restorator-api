@@ -1,15 +1,43 @@
 # todo desc
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field
+from typing_extensions import Annotated
 
 
-class TerritoryData(BaseModel):
-    """Territory with all its attributes."""
+class TerritoryBalanceResponse(BaseModel):
+    performed_at: str = Field(
+        ..., description="operation executed time", examples=["22-01-2025 09:53:46"]
+    )
+    territory_id: int = Field(
+        ...,
+        gt=0,
+        description="id of territory that inner territories were balanced",
+        examples=["7"],
+    )
+    # todo
 
-    pass
+
+class TerritoryDivideResponse(BaseModel):
+    performed_at: str = Field(
+        ..., description="operation executed time", examples=["22-01-2025 09:53:46"]
+    )
+    territory_id: int = Field(
+        ...,
+        gt=0,
+        description="id of territory that inner territories were divided",
+        examples=["7"],
+    )
+    # todo
 
 
-class HouseData(BaseModel):
-    """House with all its attributes."""
-
-    pass
+class TerritoryRestoreResponse(BaseModel):
+    performed_at: str = Field(
+        ..., description="operation executed time", examples=["22-01-2025 09:53:46"]
+    )
+    territory_id: int = Field(
+        ...,
+        gt=0,
+        description="id of territory that inner territories restored",
+        examples=["7"],
+    )
+    # todo

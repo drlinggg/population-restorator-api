@@ -1,3 +1,5 @@
+# todo desc
+
 from fastapi import FastAPI
 
 from api_app.handlers.routers import routers_list

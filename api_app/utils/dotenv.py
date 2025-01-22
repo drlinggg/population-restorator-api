@@ -33,6 +33,7 @@ def try_load_envfile(envfile: str) -> bool:
 
 
 def read_api_env() -> UrbanApiConfig:
+    # todo desc
     return UrbanApiConfig(
         host=os.getenv("HOST"),
         port=int(os.getenv("PORT")),
@@ -46,7 +47,8 @@ def read_db_env() -> DBConfig:
     return DBConfig("1", "2", "3", "4", "5", "6")
 
 
-try_load_envfile(os.environ.get("ENVFILE", "urban_api.env"))
+# todo fix path because it doesnt work if run from anything but population-restorator-api/
+try_load_envfile(os.environ.get("ENVFILE", "foreign_api.env"))
 try_load_envfile(os.environ.get("ENVFILE", "db.env"))
 urban_api_config = read_api_env()
 db_config = read_db_env()

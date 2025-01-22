@@ -1,3 +1,8 @@
-from .buildings import BuildingData
+# todo desc
+
 from .ping import PingResponse
-from .territories import TerritoryData
+from .territories import (
+    TerritoryBalanceResponse,
+    TerritoryDivideResponse,
+    TerritoryRestoreResponse,
+)
