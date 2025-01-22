@@ -1,6 +1,6 @@
 # todo desc
 
-from api_app.utils import urban_api_config
+from app.utils import urban_api_config
 
 from .requests import handle_request
 

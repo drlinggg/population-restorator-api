@@ -2,7 +2,7 @@
 
 from fastapi import FastAPI
 
-from api_app.handlers.routers import routers_list
+from app.handlers.routers import routers_list
 
 
 def get_app(prefix: str = "/api") -> FastAPI:

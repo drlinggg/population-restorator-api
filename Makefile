@@ -1,4 +1,4 @@
-CODE := api_app
+CODE := app
 
 lint:
 	poetry run pylint $(CODE)

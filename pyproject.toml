@@ -5,7 +5,7 @@ description = "todo"
 authors = ["Banakh Andrei <uuetsukeu@mail.ru>"]
 license = "MIT"
 readme = "README.md"
-packages = [{ include = "api_app" }]
+packages = [{ include = "app" }]
 
 [tool.poetry.dependencies]
 python = "^3.9"
@@ -22,7 +22,7 @@ click = "^8.1.8"
 aiohttp = "^3.11.11"
 
 [tool.poetry.scripts]
-launch_population-restorator-api = "api_app.__main__:main"
+launch_population-restorator-api = "app.__main__:main"
 
 [build-system]
 requires = ["poetry-core"]

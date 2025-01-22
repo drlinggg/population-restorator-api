@@ -1,7 +1,7 @@
 # todo desc
 
-from api_app.logic.impl.helpers import get_territories_tree
-from api_app.logic.territories import TerritoriesService
+from app.logic.impl.helpers import get_territories_tree
+from app.logic.territories import TerritoriesService
 
 
 class TerritoriesServiceImpl(TerritoriesService):

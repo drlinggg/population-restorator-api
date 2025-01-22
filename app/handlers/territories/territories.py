@@ -1,9 +1,9 @@
 from starlette import status
 
-from api_app.logic.impl.helpers import get_current_time
-from api_app.logic.impl.territories import get_territories_service
-from api_app.logic.territories import TerritoriesService
-from api_app.schemas import (
+from app.logic.impl.helpers import get_current_time
+from app.logic.impl.territories import get_territories_service
+from app.logic.territories import TerritoriesService
+from app.schemas import (
     TerritoryBalanceResponse,
     TerritoryDivideResponse,
     TerritoryRestoreResponse,

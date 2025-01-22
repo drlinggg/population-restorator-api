@@ -4,7 +4,7 @@ import uvicorn
 def _run_uvicorn():
     # todo make debug mode with reload = true/false
     uvicorn.run(
-        "api_app:app",
+        "app:app",
         reload=True,
     )
 

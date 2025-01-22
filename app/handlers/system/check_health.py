@@ -7,7 +7,7 @@ import time
 
 from starlette import status
 
-from api_app.schemas import PingResponse
+from app.schemas import PingResponse
 
 from .routers import system_router
 
