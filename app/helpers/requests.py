@@ -9,7 +9,7 @@ async def handle_request(
     async with aiohttp.ClientSession(headers=headers) as session:
         async with session.get(url=url, params=params) as response:
             #todo tobeunderstoodlater
-            response_text: str = str(await response.content.read())
+            response_text: str = await response.text()
             print(response_text)  # Отладочная информация
 
             with open("test.gejson", "w", encoding="utf-8") as file:

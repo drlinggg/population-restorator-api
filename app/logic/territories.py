@@ -1,22 +1,29 @@
 # todo desc
 
-import abc
+from app.helpers import get_territories_tree
 
 
-class TerritoriesService:
+class TerritoriesService():
+    # todo desc
 
-    @abc.abstractmethod
-    def __init__(self):
-        pass
-
-    @abc.abstractmethod
     async def balance(self, territory_id: int):
+        # todo
+        # debug f balance {id}
+        print(f"balance {territory_id}")
+        """geojson something = """
+        await get_territories_tree(territory_id)
         pass
 
-    @abc.abstractmethod
     async def divide(self, territory_id: int):
+        # todo
+        print(f"divide {territory_id}")
         pass
 
-    @abc.abstractmethod
     async def restore(self, territory_id: int):
+        # todo
+        print(f"restore {territory_id}")
         pass
+
+
+def get_territories_service() -> TerritoriesService:
+    return TerritoriesService()
