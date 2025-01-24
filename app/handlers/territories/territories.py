@@ -1,10 +1,7 @@
 from starlette import status
 
 from app.helpers import get_current_time
-from app.logic.territories import (
-    TerritoriesService,
-    get_territories_service,
-)
+from app.logic.territories import TerritoriesService, get_territories_service
 from app.schemas import (
     TerritoryBalanceResponse,
     TerritoryDivideResponse,
