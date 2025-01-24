@@ -12,8 +12,8 @@ async def handle_request(
             response_text: str = await response.text()
             # print(response_text) #debug here idk
 
-            with open("test.gejson", "w", encoding="utf-8") as file:
-                file.write(response_text)
+            # with open("test.gejson", "w", encoding="utf-8") as file:
+            #    file.write(response_text)
 
             # todo change to trycatch
             if response.status != 200:

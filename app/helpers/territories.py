@@ -31,13 +31,14 @@ async def get_internal_territories(parent_id: int) -> pd.DataFrame:
         i["properties"] = {
             **{"level": i["properties"]["level"]},
             **{"name": i["properties"]["name"]},
+            **{"parent_id": i["properties"]["parent_id"]},
+            **{"territory_id": i["properties"]["territory_id"]},
         }
 
     return internal_territories_df
 
 
 async def get_population_for_internal_territories(parent_id: int):
-    # todo desc
     pass
 
 
@@ -58,7 +59,42 @@ async def get_territory_level(territory_id) -> int:
 
 async def save_first_two_layers_of_internal_territories(
     territories: pd.DataFrame, level: int
-):
-    # todo desc
+) -> (pd.DataFrame, pd.DataFrame):
 
-    pass
+    # todo desc
+    columns = ["type", "features"]
+    inner_territories_df = pd.DataFrame(columns=columns)
+    outer_territories_df = pd.DataFrame(columns=columns)
+
+    for i in range(len(territories)):
+        if territories["features"][i]["properties"]["level"] - level == 1:
+            outer_territories_df = pd.concat(
+                [outer_territories_df, pd.DataFrame([territories.iloc[i]])],
+                ignore_index=True,
+            )
+
+        elif territories["features"][i]["properties"]["level"] - level == 2:
+            inner_territories_df = pd.concat(
+                [inner_territories_df, pd.DataFrame([territories.iloc[i]])],
+                ignore_index=True,
+            )
+
+    return (outer_territories_df, inner_territories_df)
+
+
+async def bind_inners_to_outers(
+    it: pd.DataFrame, ot: pd.DataFrame
+) -> (pd.DataFrame, pd.DataFrame):
+    # todo desc
+    for i in range(len(it)):
+        for o in range(len(ot)):
+            if (
+                it["features"][i]["properties"]["parent_id"]
+                == ot["features"][o]["properties"]["territory_id"]
+            ):
+                it["features"][i]["properties"]["outer_territory"] = ot["features"][o][
+                    "properties"
+                ]["name"]
+                break
+
+    return (it, ot)
