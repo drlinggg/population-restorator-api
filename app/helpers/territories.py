@@ -39,6 +39,24 @@ async def get_internal_territories(parent_id: int) -> pd.DataFrame:
 
 
 async def get_population_for_internal_territories(parent_id: int):
+    #todo desc
+
+    url = f"{urban_api_config.host}{urban_api_config.base_path}/indicator_values"
+
+    params = {
+        "parent_id": parent_id,
+        "indicators_ids": 1,
+    }
+
+    headers = {
+        "accept": "application/json",
+    }
+
+    data = await handle_request(url, params, headers)
+    data = await data.json()
+    values = pd.DataFrame(data)
+    #add here parse properties to get territory_id and count of people, after manage to push it into it, ot
+    #last to do is to save houses and try launch lib from api, add click
     pass
 
 
