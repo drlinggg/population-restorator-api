@@ -72,21 +72,19 @@ async def bind_population_to_territories(
     #print(len(it['features']), len(ot['features']), len(population['features']))
 
     for i in range(len(population["features"])):
-        print(f"gets outer population for {i} out of {len(ot['features'])} territories")
         for j in range(len(ot["features"])):
             if (population["features"][i]["properties"]["territory_id"] == ot["features"][j]["properties"]["territory_id"]):
-                ot["features"][j]["properties"]["population"] = population["features"][i]["properties"]["indicators"][0]["value"]
+                ot["features"][j]["properties"]["population"] = int(population["features"][i]["properties"]["indicators"][0]["value"])
                 break
                 #print(ot['features'][j]['properties']['population'], j)
 
     for i in range(len(ot["features"])):
         #does brrrrrrrrrrrrrrrr (very tough i guess but i try to run it for once)
         population = await get_population_for_internal_territories(ot['features'][i]['properties']['territory_id'])
-        print(f"gets inner population for {i} out of {len(ot['features'])} territories")
         for j in range(len(it['features'])):
             for k in range(len(population['features'])):
                 if (population["features"][k]["properties"]["territory_id"] == it["features"][j]["properties"]["territory_id"]):
-                    it["features"][j]["properties"]["population"] = population["features"][k]["properties"]["indicators"][0]["value"]
+                    it["features"][j]["properties"]["population"] = int(population["features"][k]["properties"]["indicators"][0]["value"])
                     break
                     #print(it['features'][j]['properties']['population'], j)
 
