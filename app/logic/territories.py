@@ -8,6 +8,7 @@ from app.helpers import (
     get_internal_territories,
     get_territory_level,
     save_first_two_layers_of_internal_territories,
+    pretty_format,
 )
 
 
@@ -41,8 +42,13 @@ class TerritoriesService:
             )
         )
 
-        print(outer_territories_df["features"][0]["properties"]["population"])
-
+        # id name population (outer) geometry
+        inner_territories_df, outer_territories_df = (
+            await pretty_format(
+                inner_territories_df, outer_territories_df
+            )
+        )
+        
         # get houses
 
         # start lib

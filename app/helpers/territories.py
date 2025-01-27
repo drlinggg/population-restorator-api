@@ -145,3 +145,30 @@ async def bind_inners_to_outers(
                 break
 
     return (it, ot)
+
+async def pretty_format(
+    it: pd.DataFrame, ot: pd.DataFrame
+) -> (pd.DataFrame, pd.DataFrame):
+    #todo desc
+    
+    ot_columns = ['name', 'population', 'geometry']
+    it_columns = ['name', 'population', 'outer_territory', 'geometry']
+
+    outer_territories_df = pd.DataFrame(columns=ot_columns)
+    inner_territories_df = pd.DataFrame(columns=it_columns)
+
+    for i in range(len(it)):
+        inner_territories_df.loc[len(inner_territories_df)] = [it['features'][i]['properties']['name'],
+                                                               it['features'][i]['properties']['population'],
+                                                               it['features'][i]['properties']['outer_territory'],
+                                                               it['features'][i]['geometry']]
+
+    for i in range(len(ot)):
+        outer_territories_df.loc[len(outer_territories_df)] = [ot['features'][i]['properties']['name'],
+                                                               ot['features'][i]['properties']['population'],
+                                                               ot['features'][i]['geometry']]
+
+    print(inner_territories_df)
+    print(outer_territories_df)
+    return (it, ot)
+
