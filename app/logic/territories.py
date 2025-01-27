@@ -68,12 +68,12 @@ class TerritoriesService:
         
         #test
         houses_df = read_file("houses.geojson")
-        #print(inner_territories_df)
+        print(inner_territories_df)
         
         # start lib
-        #city = city_as_territory(500, outer_territories_df, inner_territories_df, houses_df)
-        #balance_territories(city)
-        #balance_houses(city)
+        city = city_as_territory(500, outer_territories_df, inner_territories_df, houses_df)
+        balance_territories(city)
+        balance_houses(city)
 
         pass
 
