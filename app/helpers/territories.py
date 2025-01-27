@@ -56,6 +56,7 @@ async def get_population_for_internal_territories(parent_id: int) -> pd.DataFram
     data = await handle_request(url, params, headers)
     data = await data.json()
     values = pd.DataFrame(data)
+    #print(values['features'][0]['properties']['territory_id'])
     return values
 
 
@@ -66,25 +67,23 @@ async def bind_population_to_territories(
 
     population = await get_population_for_internal_territories(parent_id)
 
+    #print(len(it['features']), len(ot['features']), len(population['features']))
+
     for i in range(len(population["features"])):
         for j in range(len(it["features"])):
-            if (
-                population["features"][i]["properties"]["territory_id"]
-                == it["features"][j]["properties"]["territory_id"]
-            ):
-                it["features"][j]["properties"]["population"] = population["features"][
-                    i
-                ]["properties"]["indicators"][0]["value"]
+            if (population["features"][i]["properties"]["territory_id"] == it["features"][j]["properties"]["territory_id"]):
+                it["features"][j]["properties"]["population"] = population["features"][i]["properties"]["indicators"][0]["value"]
+                #print(it['features'][j]['properties']['population'], j)
+
 
     for i in range(len(population["features"])):
         for j in range(len(ot["features"])):
-            if (
-                population["features"][i]["properties"]["territory_id"]
-                == ot["features"][j]["properties"]["territory_id"]
-            ):
-                ot["features"][j]["properties"]["population"] = population["features"][
-                    i
-                ]["properties"]["indicators"][0]["value"]
+            if (population["features"][i]["properties"]["territory_id"] == ot["features"][j]["properties"]["territory_id"]):
+                ot["features"][j]["properties"]["population"] = population["features"][i]["properties"]["indicators"][0]["value"]
+                #print(ot['features'][j]['properties']['population'], j)
+
+    #the reason why where is no popultaion in inner territories is because get_population_for_internal_territories 
+    #doesnt return it for all lvls, but just one
 
     return (it, ot)
 
@@ -157,18 +156,20 @@ async def pretty_format(
     outer_territories_df = pd.DataFrame(columns=ot_columns)
     inner_territories_df = pd.DataFrame(columns=it_columns)
 
-    for i in range(len(it)):
-        inner_territories_df.loc[len(inner_territories_df)] = [it['features'][i]['properties']['name'],
-                                                               it['features'][i]['properties']['population'],
-                                                               it['features'][i]['properties']['outer_territory'],
-                                                               it['features'][i]['geometry']]
+    #print(it['features'][0]['properties'])
+    
+    #for i in range(len(it)):
+    #    inner_territories_df.loc[len(inner_territories_df)] = [it['features'][i]['properties']['name'],
+    #                                                           it['features'][i]['properties']['population'],
+    #                                                           it['features'][i]['properties']['outer_territory'],
+    #                                                           it['features'][i]['geometry']]
 
-    for i in range(len(ot)):
-        outer_territories_df.loc[len(outer_territories_df)] = [ot['features'][i]['properties']['name'],
-                                                               ot['features'][i]['properties']['population'],
-                                                               ot['features'][i]['geometry']]
+    #for i in range(len(ot)):
+    #    outer_territories_df.loc[len(outer_territories_df)] = [ot['features'][i]['properties']['name'],
+    #                                                           ot['features'][i]['properties']['population'],
+    #                                                           ot['features'][i]['geometry']]
 
-    print(inner_territories_df)
-    print(outer_territories_df)
-    return (it, ot)
+    #print(inner_territories_df)
+    #print(outer_territories_df)
+    return (inner_territories_df, outer_territories_df)
 

@@ -11,6 +11,20 @@ from app.helpers import (
     pretty_format,
 )
 
+from population_restorator.balancer import (
+    balance_territories,
+    balance_houses,
+)
+
+from population_restorator.utils.data_structure import (
+    city_as_territory,
+)
+
+#tobedeleted
+from population_restorator.utils.data_loader import (
+    read_file,
+)
+
 
 class TerritoriesService:
     # todo desc
@@ -42,6 +56,9 @@ class TerritoriesService:
             )
         )
 
+        # get houses
+                #id living_area inner_territory geometry
+
         # id name population (outer) geometry
         inner_territories_df, outer_territories_df = (
             await pretty_format(
@@ -49,9 +66,14 @@ class TerritoriesService:
             )
         )
         
-        # get houses
-
+        #test
+        houses_df = read_file("houses.geojson")
+        #print(inner_territories_df)
+        
         # start lib
+        #city = city_as_territory(500, outer_territories_df, inner_territories_df, houses_df)
+        #balance_territories(city)
+        #balance_houses(city)
 
         pass
 
