@@ -38,14 +38,15 @@ async def get_internal_territories(parent_id: int) -> pd.DataFrame:
     return internal_territories_df
 
 
-async def get_population_for_internal_territories(parent_id: int):
-    #todo desc
+async def get_population_for_internal_territories(parent_id: int) -> pd.DataFrame:
+    # todo desc
 
-    url = f"{urban_api_config.host}{urban_api_config.base_path}/indicator_values"
+    url = f"{urban_api_config.host}{urban_api_config.base_path}/territory/indicator_values"
 
     params = {
         "parent_id": parent_id,
         "indicators_ids": 1,
+        "last_only": "true",
     }
 
     headers = {
@@ -55,9 +56,37 @@ async def get_population_for_internal_territories(parent_id: int):
     data = await handle_request(url, params, headers)
     data = await data.json()
     values = pd.DataFrame(data)
-    #add here parse properties to get territory_id and count of people, after manage to push it into it, ot
-    #last to do is to save houses and try launch lib from api, add click
-    pass
+    return values
+
+
+async def bind_population_to_territories(
+    it: pd.DataFrame, ot: pd.DataFrame, parent_id: int
+) -> (pd.DataFrame, pd.DataFrame):
+    # todo desc
+
+    population = await get_population_for_internal_territories(parent_id)
+
+    for i in range(len(population["features"])):
+        for j in range(len(it["features"])):
+            if (
+                population["features"][i]["properties"]["territory_id"]
+                == it["features"][j]["properties"]["territory_id"]
+            ):
+                it["features"][j]["properties"]["population"] = population["features"][
+                    i
+                ]["properties"]["indicators"][0]["value"]
+
+    for i in range(len(population["features"])):
+        for j in range(len(ot["features"])):
+            if (
+                population["features"][i]["properties"]["territory_id"]
+                == ot["features"][j]["properties"]["territory_id"]
+            ):
+                ot["features"][j]["properties"]["population"] = population["features"][
+                    i
+                ]["properties"]["indicators"][0]["value"]
+
+    return (it, ot)
 
 
 async def get_territory_level(territory_id) -> int:

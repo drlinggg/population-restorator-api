@@ -4,6 +4,7 @@ import pandas as pd
 
 from app.helpers import (
     bind_inners_to_outers,
+    bind_population_to_territories,
     get_internal_territories,
     get_territory_level,
     save_first_two_layers_of_internal_territories,
@@ -28,9 +29,19 @@ class TerritoriesService:
             )
         )
 
-        await bind_inners_to_outers(inner_territories_df, outer_territories_df)
+        inner_territories_df, outer_territories_df = (
+            await bind_inners_to_outers(
+                inner_territories_df, outer_territories_df
+            )
+        )
 
-        # bind population
+        inner_territories_df, outer_territories_df = (
+            await bind_population_to_territories(
+                inner_territories_df, outer_territories_df, territory_id
+            )
+        )
+
+        print(outer_territories_df["features"][0]["properties"]["population"])
 
         # get houses
 
