@@ -10,7 +10,25 @@ from .requests import handle_request
 
 
 async def get_internal_territories(parent_id: int) -> pd.DataFrame:
-    # todo desc
+    """ 
+    Returns dataframe for all internal territories that contains territory with given parent_id
+    
+    index=territory_id
+    territory_id (int): id of current territory
+    name (str): name of current territory
+    parent_id (int): territory on level above that has current territory as a child
+    geometry (geojson) : coords of current territory
+
+    output example:
+
+         territory_id                                name  parent_id  level                                           geometry
+      3             3     Самойловское сельское поселение          2      4  {'type': 'Polygon', 'coordinates': [[[34.42168...
+    ...          ...                                 ...        ...     ...                                                ...
+
+    """
+
+    # getting response
+
     url = f"{urban_api_config.host}{urban_api_config.base_path}/all_territories"
 
     params = {
@@ -26,21 +44,43 @@ async def get_internal_territories(parent_id: int) -> pd.DataFrame:
     data = await data.json()
     internal_territories_df = pd.DataFrame(data)
 
-    # clear properties except level and name
+    # formatting
+
+    columns = ['territory_id','name','parent_id','level','geometry']
+    formatted_territories_df = pd.DataFrame(columns=columns)
+    formatted_territories_df.set_index('territory_id')
+
     for i in internal_territories_df["features"]:
-        i["properties"] = {
-            **{"level": i["properties"]["level"]},
-            **{"name": i["properties"]["name"]},
-            **{"parent_id": i["properties"]["parent_id"]},
-            **{"territory_id": i["properties"]["territory_id"]},
+
+        formatted_territories_df.loc[i['properties']['territory_id']] = {
+            "name": i["properties"]["name"],
+            "parent_id": i["properties"]["parent_id"],
+            "level": i["properties"]["level"],
+            "territory_id": i["properties"]["territory_id"],
+            "geometry": i['geometry'],
         }
 
     print(f'get internal territories for territory id {parent_id}')
-    return internal_territories_df
+    return formatted_territories_df
 
 
-async def get_population_for_internal_territories(parent_id: int) -> pd.DataFrame:
-    # todo desc
+async def get_population_for_child_territories(parent_id: int) -> pd.DataFrame:
+    """ 
+    Returns population dataframe with child territories with one level below and population of them for parent territory
+    
+    index=territory_id
+    territory_id (int): id of current territory
+    population (int) : amount of people in this territory
+
+    output example:
+       territory_id  population
+    5             5       20169
+    6             6        1231
+  ...           ...         ...
+
+    """
+
+    # getting response
 
     url = f"{urban_api_config.host}{urban_api_config.base_path}/territory/indicator_values"
 
@@ -56,134 +96,50 @@ async def get_population_for_internal_territories(parent_id: int) -> pd.DataFram
 
     data = await handle_request(url, params, headers)
     data = await data.json()
-    values = pd.DataFrame(data)
-    print(f'get population for internal territories of territory id {parent_id}')
-    #print(values['features'][0]['properties']['territory_id'])
-    return values
+    population_df = pd.DataFrame(data)
+
+    # formatting
+
+    columns = ['territory_id', 'population']
+    formatted_population_df = pd.DataFrame(columns=columns)
+    formatted_population_df.set_index('territory_id')
+
+    for i in population_df["features"]:
+    
+        formatted_population_df.loc[i['properties']['territory_id']] = {
+            "territory_id": i["properties"]["territory_id"],
+            "population": int(i["properties"]["indicators"][0]['value']),
+        }
+    
+    print(f'get population for child territories of territory id {parent_id}')
+
+
+    #print(formatted_population_df)
+    return formatted_population_df
 
 
 async def bind_population_to_territories(
-    it: pd.DataFrame, ot: pd.DataFrame, parent_id: int
-) -> (pd.DataFrame, pd.DataFrame):
-    # todo desc
+        territories_df: pd.DataFrame
+) -> pd.DataFrame:
+    """
+    Updates existing territories_df by adding population (int) column
+    population_df is taken by parts for all parent_id's in func get_population_for_child_territories(id)
+    """
 
-    population = await get_population_for_internal_territories(parent_id)
+    parent_ids = set()
 
-    #print(len(it['features']), len(ot['features']), len(population['features']))
+    for parent_id in territories_df['parent_id']:
+        parent_ids.add(parent_id)
 
-    for i in range(len(population["features"])):
-        for j in range(len(ot["features"])):
-            if (population["features"][i]["properties"]["territory_id"] == ot["features"][j]["properties"]["territory_id"]):
-                ot["features"][j]["properties"]["population"] = int(population["features"][i]["properties"]["indicators"][0]["value"])
-                break
-                #print(ot['features'][j]['properties']['population'], j)
+    #print(parent_ids)
 
-    for i in range(len(ot["features"])):
-        #does brrrrrrrrrrrrrrrr (very tough i guess but i try to run it for once)
-        population = await get_population_for_internal_territories(ot['features'][i]['properties']['territory_id'])
-        for j in range(len(it['features'])):
-            for k in range(len(population['features'])):
-                if (population["features"][k]["properties"]["territory_id"] == it["features"][j]["properties"]["territory_id"]):
-                    it["features"][j]["properties"]["population"] = int(population["features"][k]["properties"]["indicators"][0]["value"])
-                    break
-                    #print(it['features'][j]['properties']['population'], j)
+    population_df = pd.DataFrame(columns=['territory_id', 'population'])
+    population_df.set_index('territory_id')
 
-    #old version if handler gets param childs=true
-    #for i in range(len(population["features"])):
-    #
-    #    for j in range(len(it["features"])):
-    #        if (population["features"][i]["properties"]["territory_id"] == it["features"][j]["properties"]["territory_id"]):
-    #            it["features"][j]["properties"]["population"] = population["features"][i]["properties"]["indicators"][0]["value"]
-    #            #print(it['features'][j]['properties']['population'], j)
-    #
-    #the reason why where is no popultaion in inner territories in that case is because get_population_for_internal_territories 
-    #doesnt return it for all lvls but just one at this moment
-
-    return (it, ot)
-
-
-async def get_territory_level(territory_id) -> int:
-    # todo desc
-    url = (
-        f"{urban_api_config.host}{urban_api_config.base_path}/territory/{territory_id}"
-    )
-
-    headers = {
-        "accept": "application/json",
-    }
-    response = await handle_request(url, headers=headers)
-
-    print(f'get territory id {territory_id} lvl')
-    data = json.loads(await response.text())
-    return data["level"]
-
-
-async def save_first_two_layers_of_internal_territories(
-    territories: pd.DataFrame, level: int
-) -> (pd.DataFrame, pd.DataFrame):
-
-    # todo desc
-    columns = ["type", "features"]
-    inner_territories_df = pd.DataFrame(columns=columns)
-    outer_territories_df = pd.DataFrame(columns=columns)
-
-    print(f'save first two layers of internal territories for {level} territory id')
-
-    for i in range(len(territories)):
-        if territories["features"][i]["properties"]["level"] - level == 1:
-            outer_territories_df = pd.concat(
-                [outer_territories_df, pd.DataFrame([territories.iloc[i]])],
-                ignore_index=True,
-            )
-
-        elif territories["features"][i]["properties"]["level"] - level == 2:
-            inner_territories_df = pd.concat(
-                [inner_territories_df, pd.DataFrame([territories.iloc[i]])],
-                ignore_index=True,
-            )
-
-    return (outer_territories_df, inner_territories_df)
-
-
-async def bind_inners_to_outers(
-    it: pd.DataFrame, ot: pd.DataFrame
-) -> (pd.DataFrame, pd.DataFrame):
-    # todo desc
-    for i in range(len(it)):
-        for o in range(len(ot)):
-            if (it["features"][i]["properties"]["parent_id"] == ot["features"][o]["properties"]["territory_id"]):
-                it["features"][i]["properties"]["outer_territory"] = ot["features"][o]["properties"]["name"]
-                break
-
-    return (it, ot)
-
-async def pretty_format(
-    it: pd.DataFrame, ot: pd.DataFrame
-) -> (pd.DataFrame, pd.DataFrame):
-    #todo desc
+    for parent_id in parent_ids:
+        temp_population_df = await get_population_for_child_territories(parent_id)
+        population_df = pd.concat([population_df, temp_population_df])
     
-    ot_columns = ['name', 'population', 'geometry']
-    it_columns = ['name', 'population', 'outer_territory', 'geometry']
+    territories_df = territories_df.merge(population_df, on='territory_id', how='left')
 
-    outer_territories_df = pd.DataFrame(columns=ot_columns)
-    inner_territories_df = pd.DataFrame(columns=it_columns)
-
-    #print(it['features'][0]['properties'])
-
-    print('pretty formatting')
-    
-    for i in range(len(it)):
-        inner_territories_df.loc[len(inner_territories_df)] = [it['features'][i]['properties']['name'],
-                                                               it['features'][i]['properties']['population'],
-                                                               it['features'][i]['properties']['outer_territory'],
-                                                               it['features'][i]['geometry']]
-
-    for i in range(len(ot)):
-        outer_territories_df.loc[len(outer_territories_df)] = [ot['features'][i]['properties']['name'],
-                                                               ot['features'][i]['properties']['population'],
-                                                               ot['features'][i]['geometry']]
-
-    #print(inner_territories_df)
-    #print(outer_territories_df)
-    return (inner_territories_df, outer_territories_df)
-
+    return territories_df
