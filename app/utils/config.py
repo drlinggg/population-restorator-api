@@ -4,12 +4,13 @@ from dataclasses import dataclass
 
 
 @dataclass
-class UrbanApiConfig:
-    # todo desc
+class ApiConfig:
+    """defaut api config"""
+
     host: str
     port: int
     api_key: str
-    base_path: str = "/api/v1"
+    base_path: str
 
 
 @dataclass

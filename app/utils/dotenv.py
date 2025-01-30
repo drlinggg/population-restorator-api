@@ -4,7 +4,7 @@ Environment operation functions are defined here.
 
 import os
 
-from .config import DBConfig, UrbanApiConfig
+from .config import ApiConfig, DBConfig
 
 
 def try_load_envfile(envfile: str) -> bool:
@@ -28,14 +28,15 @@ def try_load_envfile(envfile: str) -> bool:
     return True
 
 
-def read_api_env() -> UrbanApiConfig:
+def read_api_env() -> ApiConfig:
     """
-    Reads env variables and creates urban api config
+    Reads env variables and creates api config
     """
-    return UrbanApiConfig(
+    return ApiConfig(
         host=os.getenv("HOST"),
         port=int(os.getenv("PORT")),
         api_key=os.getenv("API_KEY"),
+        base_path=os.getenv("BASE_PATH"),
     )
 
 
@@ -49,6 +50,10 @@ def read_db_env() -> DBConfig:
 
 # todo fix path because it doesnt work if run from anything but population-restorator-api/
 try_load_envfile(os.environ.get("ENVFILE", "urban_api.env"))
-try_load_envfile(os.environ.get("ENVFILE", "db.env"))
 urban_api_config = read_api_env()
+
+try_load_envfile(os.environ.get("ENVFILE", "db.env"))
 db_config = read_db_env()
+
+try_load_envfile(os.environ.get("ENVFILE", "socdemo_api.env"))
+socdemo_api_config = read_api_env()

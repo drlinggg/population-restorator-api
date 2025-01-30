@@ -4,12 +4,39 @@ are defined here
 """
 
 import json
+from dataclasses import dataclass
 
 import pandas as pd
 
 from app.utils import urban_api_config
 
-from .requests import handle_request
+from .requests import SuccessHandle, handle_request
+
+
+@dataclass
+class BaseGetResult:
+    """todo"""
+
+    data: pd.DataFrame | None = None
+
+    def is_success(self):
+        pass
+
+
+@dataclass
+class SuccessGet(BaseGetResult):
+    """todo"""
+
+    def is_success(self):
+        return True
+
+
+@dataclass
+class FailedToGet(BaseGetResult):
+    """todo"""
+
+    def is_success(self):
+        return False
 
 
 async def get_internal_territories(parent_id: int) -> pd.DataFrame:
@@ -42,7 +69,11 @@ async def get_internal_territories(parent_id: int) -> pd.DataFrame:
         "accept": "application/json",
     }
 
-    data = await handle_request(url, params, headers)
+    result = await handle_request(url, params, headers)
+    if not (isinstance(result, SuccessHandle)):
+        return FailedToGet()
+    data = result.response
+
     internal_territories_df = pd.DataFrame(data)
 
     # formatting
@@ -61,8 +92,7 @@ async def get_internal_territories(parent_id: int) -> pd.DataFrame:
             "geometry": i["geometry"],
         }
 
-    print(f"get internal territories for territory id {parent_id}")
-    return formatted_territories_df
+    return SuccessGet(formatted_territories_df)
 
 
 async def get_population_for_child_territories(parent_id: int) -> pd.DataFrame:
@@ -95,7 +125,11 @@ async def get_population_for_child_territories(parent_id: int) -> pd.DataFrame:
         "accept": "application/json",
     }
 
-    data = await handle_request(url, params, headers)
+    result = await handle_request(url, params, headers)
+    if not (isinstance(result, SuccessHandle)):
+        return FailedToGet()
+    data = result.response
+
     population_df = pd.DataFrame(data)
 
     # formatting
@@ -111,10 +145,8 @@ async def get_population_for_child_territories(parent_id: int) -> pd.DataFrame:
             "population": int(i["properties"]["indicators"][0]["value"]),
         }
 
-    print(f"get population for child territories of territory id {parent_id}")
-
     # print(formatted_population_df)
-    return formatted_population_df
+    return SuccessGet(formatted_population_df)
 
 
 async def bind_population_to_territories(territories_df: pd.DataFrame) -> pd.DataFrame:
@@ -137,10 +169,15 @@ async def bind_population_to_territories(territories_df: pd.DataFrame) -> pd.Dat
 
     # get population of child territories one level below for each parent territory and put it in df
     for parent_id in parent_ids:
-        temp_population_df = await get_population_for_child_territories(parent_id)
+        result = await get_population_for_child_territories(parent_id)
+
+        if not (isinstance(result, SuccessGet)):
+            return FailedToGet()
+
+        temp_population_df = result.data
         population_df = pd.concat([population_df, temp_population_df])
 
     # merge dfs
     territories_df = territories_df.merge(population_df, on="territory_id", how="left")
 
-    return territories_df
+    return SuccessGet(territories_df)

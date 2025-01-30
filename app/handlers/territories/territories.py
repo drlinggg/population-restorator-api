@@ -1,5 +1,6 @@
 """FastApi territory related handlers are defined here"""
 
+from fastapi import HTTPException, status
 from starlette import status
 
 from app.helpers import get_current_time
@@ -17,13 +18,22 @@ from .routers import territories_router
     "/territories/balance/{territory_id}",
     status_code=status.HTTP_201_CREATED,
     response_model=TerritoryBalanceResponse,
+    # idk mb do it another way
+    responses={
+        502: {"description": "Error contacting external service"},
+    },
 )
 async def balance(territory_id: int):
     # todo desc
     territories_service: TerritoriesService = get_territories_service()
-    # todo debug
-    await territories_service.balance(territory_id)
-    return TerritoryBalanceResponse(performed_at=get_current_time(), territory_id=territory_id)
+    # todo add debug
+    result = await territories_service.balance(territory_id)
+
+    # tobechanged
+    if result:
+        return TerritoryBalanceResponse(performed_at=get_current_time(), territory_id=territory_id)
+    else:
+        raise HTTPException(status_code=500, detail="Error contacting external service")
 
 
 @territories_router.post(

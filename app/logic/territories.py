@@ -6,6 +6,7 @@ import pandas as pd
 from population_restorator.scenarios import balance as prbalance
 
 from app.helpers import (
+    SuccessGet,
     bind_population_to_territories,
     get_internal_territories,
     get_population_for_child_territories,
@@ -17,13 +18,28 @@ class TerritoriesService:
 
     async def balance(self, territory_id: int):
         """ """
-        internal_territories_df = await get_internal_territories(territory_id)
-        internal_territories_df = await bind_population_to_territories(internal_territories_df)
+        result = await get_internal_territories(territory_id)
+
+        # tobechanged
+        if not (isinstance(result, SuccessGet)):
+            return False
+        internal_territories_df = result.data
+
+        result = await bind_population_to_territories(internal_territories_df)
+
+        # tobechanged
+        if not (isinstance(result, SuccessGet)):
+            return False
+        internal_territories_df = result.data
+
         # todo add houses getter
         # id living_area territory_id geometry
 
         # start lib
-        #result = prbalance(100000, internal_territories_df, pd.DataFrame())
+        # result = prbalance(100000, internal_territories_df, pd.DataFrame())
+
+        # tobechanged
+        return True
 
     async def divide(self, territory_id: int):
         # todo
