@@ -17,23 +17,20 @@ class TerritoriesService:
 
     async def balance(self, territory_id: int):
         """ """
-        print(f"balance {territory_id}")
         internal_territories_df = await get_internal_territories(territory_id)
         internal_territories_df = await bind_population_to_territories(internal_territories_df)
         # todo add houses getter
         # id living_area territory_id geometry
 
         # start lib
-        result = prbalance(100000, internal_territories_df, pd.DataFrame())
+        #result = prbalance(100000, internal_territories_df, pd.DataFrame())
 
     async def divide(self, territory_id: int):
         # todo
-        print(f"divide {territory_id}")
         pass
 
     async def restore(self, territory_id: int):
         # todo
-        print(f"restore {territory_id}")
         pass
 
 

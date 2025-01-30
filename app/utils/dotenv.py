@@ -29,7 +29,9 @@ def try_load_envfile(envfile: str) -> bool:
 
 
 def read_api_env() -> UrbanApiConfig:
-    # todo desc
+    """
+    Reads env variables and creates urban api config
+    """
     return UrbanApiConfig(
         host=os.getenv("HOST"),
         port=int(os.getenv("PORT")),
@@ -38,7 +40,9 @@ def read_api_env() -> UrbanApiConfig:
 
 
 def read_db_env() -> DBConfig:
-    # todo desc
+    """
+    Reads env variables and creates db config
+    """
     # todo
     return DBConfig("1", "2", "3", "4", "5", "6")
 

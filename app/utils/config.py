@@ -1,4 +1,4 @@
-# todo desc
+"""Configs are defined here"""
 
 from dataclasses import dataclass
 

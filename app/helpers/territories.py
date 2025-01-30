@@ -43,7 +43,6 @@ async def get_internal_territories(parent_id: int) -> pd.DataFrame:
     }
 
     data = await handle_request(url, params, headers)
-    data = await data.json()
     internal_territories_df = pd.DataFrame(data)
 
     # formatting
@@ -97,7 +96,6 @@ async def get_population_for_child_territories(parent_id: int) -> pd.DataFrame:
     }
 
     data = await handle_request(url, params, headers)
-    data = await data.json()
     population_df = pd.DataFrame(data)
 
     # formatting
