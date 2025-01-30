@@ -1,4 +1,6 @@
-# todo desc
+"""
+Internal helper functions are located here
+"""
 
 from .territories import (
     bind_population_to_territories,

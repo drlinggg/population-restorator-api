@@ -1,5 +1,3 @@
-# todo desc
-
 from time import gmtime, strftime
 
 

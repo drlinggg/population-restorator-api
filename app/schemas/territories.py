@@ -1,4 +1,7 @@
-# todo desc
+"""
+Balance, divide, restore 
+responses are defined here
+"""
 
 from pydantic import BaseModel, Field
 from typing_extensions import Annotated
@@ -11,9 +14,7 @@ class TerritoryBalanceResponse(BaseModel):
         description="id of territory that inner territories were balanced",
         examples=["7"],
     )
-    performed_at: str = Field(
-        ..., description="time of finishing operation", examples=["22-01-2025 09:53:46"]
-    )
+    performed_at: str = Field(..., description="time of finishing operation", examples=["22-01-2025 09:53:46"])
     # todo
 
 
@@ -24,9 +25,7 @@ class TerritoryDivideResponse(BaseModel):
         description="id of territory that inner territories were divided",
         examples=["7"],
     )
-    performed_at: str = Field(
-        ..., description="time of finishing operation", examples=["22-01-2025 09:53:46"]
-    )
+    performed_at: str = Field(..., description="time of finishing operation", examples=["22-01-2025 09:53:46"])
     # todo
 
 
@@ -37,7 +36,5 @@ class TerritoryRestoreResponse(BaseModel):
         description="id of territory that inner territories restored",
         examples=["7"],
     )
-    performed_at: str = Field(
-        ..., description="time of finishing operation", examples=["22-01-2025 09:53:46"]
-    )
+    performed_at: str = Field(..., description="time of finishing operation", examples=["22-01-2025 09:53:46"])
     # todo

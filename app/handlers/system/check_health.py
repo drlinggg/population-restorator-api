@@ -1,5 +1,5 @@
 """
-health_check endpoint is defined here.
+health_check handler is defined here.
 """
 
 import asyncio

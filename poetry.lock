@@ -974,20 +974,16 @@ files = []
 develop = false
 
 [package.dependencies]
-click = "^8.1.3"
 loguru = "^0.7.0"
 numpy = "^1.25.0"
 openpyxl = "^3.1.2"
 pandas = "^2.0.3"
 rich = "^13.4.2"
-sqlalchemy = "^2.0.20"
 tqdm = "^4.65.0"
 
 [package.source]
-type = "git"
-url = "git@github.com:drlinggg/population-restorator.git"
-reference = "HEAD"
-resolved_reference = "53b95f2e7a4293201f62d3c7cce6b3147b5240f2"
+type = "directory"
+url = "population-restorator"
 
 [[package]]
 name = "propcache"
@@ -1818,4 +1814,4 @@ propcache = ">=0.2.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "ba75684be85e98b7ecc9bb4fa2da576df89ddeeaf8e4cf88e4ca5595e00f7d36"
+content-hash = "b7dd3ea7e78d1c2330fb05169f3621547ff8451aecd6041b9c5519f3a415baae"

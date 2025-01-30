@@ -1,3 +1,5 @@
+"""FastApi territory related handlers are defined here"""
+
 from starlette import status
 
 from app.helpers import get_current_time
@@ -21,9 +23,7 @@ async def balance(territory_id: int):
     territories_service: TerritoriesService = get_territories_service()
     # todo debug
     await territories_service.balance(territory_id)
-    return TerritoryBalanceResponse(
-        performed_at=get_current_time(), territory_id=territory_id
-    )
+    return TerritoryBalanceResponse(performed_at=get_current_time(), territory_id=territory_id)
 
 
 @territories_router.post(
@@ -35,9 +35,7 @@ async def divide(territory_id: int):
     # todo desc
     territories_service: TerritoriesService = get_territories_service()
     await territories_service.divide(territory_id)
-    return TerritoryDivideResponse(
-        performed_at=get_current_time(), territory_id=territory_id
-    )
+    return TerritoryDivideResponse(performed_at=get_current_time(), territory_id=territory_id)
 
 
 @territories_router.post(
@@ -49,6 +47,4 @@ async def restore(territory_id: int):
     # todo desc
     territories_service: TerritoriesService = get_territories_service()
     await territories_service.restore(territory_id)
-    return TerritoryRestoreResponse(
-        performed_at=get_current_time(), territory_id=territory_id
-    )
+    return TerritoryRestoreResponse(performed_at=get_current_time(), territory_id=territory_id)
