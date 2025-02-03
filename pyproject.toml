@@ -24,6 +24,7 @@ geopandas = "^1.0.1"
 #population-restorator = {git = "git@github.com:drlinggg/population-restorator.git"}
 population-restorator = {path = "population-restorator"}
 structlog = "^25.1.0"
+pyyaml = "^6.0.2"
 
 [tool.poetry.scripts]
 launch_population-restorator-api = "app.__main__:main"

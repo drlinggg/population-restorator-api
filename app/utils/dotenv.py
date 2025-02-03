@@ -4,8 +4,6 @@ Environment operation functions are defined here.
 
 import os
 
-from .config import ApiConfig, DBConfig
-
 
 def try_load_envfile(envfile: str) -> bool:
     """
@@ -26,34 +24,3 @@ def try_load_envfile(envfile: str) -> bool:
                     value = value[: value.index(" #")]
                 os.environ[name] = value.strip()
     return True
-
-
-def read_api_env() -> ApiConfig:
-    """
-    Reads env variables and creates api config
-    """
-    return ApiConfig(
-        host=os.getenv("HOST"),
-        port=int(os.getenv("PORT")),
-        api_key=os.getenv("API_KEY"),
-        base_path=os.getenv("BASE_PATH"),
-    )
-
-
-def read_db_env() -> DBConfig:
-    """
-    Reads env variables and creates db config
-    """
-    # todo
-    return DBConfig("1", "2", "3", "4", "5", "6")
-
-
-# todo fix path because it doesnt work if run from anything but population-restorator-api/
-try_load_envfile(os.environ.get("ENVFILE", "urban_api.env"))
-urban_api_config = read_api_env()
-
-try_load_envfile(os.environ.get("ENVFILE", "db.env"))
-db_config = read_db_env()
-
-try_load_envfile(os.environ.get("ENVFILE", "socdemo_api.env"))
-socdemo_api_config = read_api_env()

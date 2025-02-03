@@ -2,8 +2,6 @@ import json
 
 import pandas as pd
 
-from app.utils import urban_api_config
-
 from .requests import handle_request
 
 

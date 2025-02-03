@@ -29,6 +29,7 @@ async def balance(territory_id: int):
     # todo add debug
     result = await territories_service.balance(territory_id)
 
+    result = True
     # tobechanged
     if result:
         return TerritoryBalanceResponse(performed_at=get_current_time(), territory_id=territory_id)

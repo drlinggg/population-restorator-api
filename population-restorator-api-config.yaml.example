@@ -1,0 +1,28 @@
+app:
+  host: "0.0.0.0"
+  port: 8000
+  debug: 1
+  name: "population-restorator-api"
+db:
+  addr: "localhost"
+  port: 5432
+  name: "TODO"
+  user: "TODO"
+  password: "todo"
+  pool_size: 15
+logging:
+  level: "INFO"
+  files:
+    - filename: "test.conf"
+      level: "INFO"
+urban_api:
+  host: "https://urban-api.idu.kanootoko.org"
+  port: 443
+  api_key: null
+  base_path: "/api/v1"
+socdemo_api:
+  host: "TODO"
+  port: 443
+  api_key: null
+  base_path: "/api/v1"
+

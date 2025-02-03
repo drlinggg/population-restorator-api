@@ -4,13 +4,17 @@ are defined here
 """
 
 import json
+import os
 from dataclasses import dataclass
 
 import pandas as pd
 
-from app.utils import urban_api_config
+from app.utils import PopulationRestoratorApiConfig
 
 from .requests import SuccessHandle, handle_request
+
+
+config = PopulationRestoratorApiConfig.from_file_or_default(os.getenv("CONFIG_PATH"))
 
 
 @dataclass
@@ -57,8 +61,9 @@ async def get_internal_territories(parent_id: int) -> pd.DataFrame:
     """
 
     # getting response
+    url = f"{config.urban_api.host}{config.urban_api.base_path}/all_territories"
 
-    url = f"{urban_api_config.host}{urban_api_config.base_path}/all_territories"
+    print(url)
 
     params = {
         "parent_id": parent_id,
@@ -113,7 +118,7 @@ async def get_population_for_child_territories(parent_id: int) -> pd.DataFrame:
 
     # getting response
 
-    url = f"{urban_api_config.host}{urban_api_config.base_path}/territory/indicator_values"
+    url = f"{config.urban_api.host}{config.urban_api.base_path}/territory/indicator_values"
 
     params = {
         "parent_id": parent_id,
