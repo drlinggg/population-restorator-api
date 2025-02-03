@@ -63,8 +63,6 @@ async def get_internal_territories(parent_id: int) -> pd.DataFrame:
     # getting response
     url = f"{config.urban_api.host}{config.urban_api.base_path}/all_territories"
 
-    print(url)
-
     params = {
         "parent_id": parent_id,
         "get_all_levels": "True",
