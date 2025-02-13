@@ -9,3 +9,7 @@ from .territories import (
     get_population_for_child_territories,
 )
 from .time import get_current_time
+
+from .houses import (
+    get_houses_from_territories,
+)

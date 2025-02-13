@@ -80,7 +80,6 @@ async def get_internal_territories(parent_id: int) -> pd.DataFrame:
     internal_territories_df = pd.DataFrame(data)
 
     # formatting
-
     columns = ["territory_id", "name", "parent_id", "level", "geometry"]
     formatted_territories_df = pd.DataFrame(columns=columns)
     formatted_territories_df.set_index("territory_id")
@@ -89,7 +88,7 @@ async def get_internal_territories(parent_id: int) -> pd.DataFrame:
 
         formatted_territories_df.loc[i["properties"]["territory_id"]] = {
             "name": i["properties"]["name"],
-            "parent_id": i["properties"]["parent_id"],
+            "parent_id": i["properties"]["parent"]["id"],
             "level": i["properties"]["level"],
             "territory_id": i["properties"]["territory_id"],
             "geometry": i["geometry"],

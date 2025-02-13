@@ -6,7 +6,7 @@ import logging
 
 import aiohttp
 
-from app.utils import FileLogger, PopulationRestoratorApiConfig
+from app.utils import PopulationRestoratorApiConfig
 
 from .time import get_current_time
 

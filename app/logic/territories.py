@@ -10,6 +10,7 @@ from app.helpers import (
     bind_population_to_territories,
     get_internal_territories,
     get_population_for_child_territories,
+    get_houses_from_territories,
 )
 
 
@@ -32,11 +33,14 @@ class TerritoriesService:
             return False
         internal_territories_df = result.data
 
-        # todo add houses getter
-        # id living_area territory_id geometry
+        result = await get_houses_from_territories(territory_id)
 
-        # start lib
-        # result = prbalance(100000, internal_territories_df, pd.DataFrame())
+        # tobechanged
+        #if not (isinstance(result, SuccessGet)):
+        #    return False
+        internal_houses_df = result.data
+
+        # result = prbalance(100000, internal_territories_df, internal_houses_df)
 
         # tobechanged
         return True
