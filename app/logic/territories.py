@@ -5,12 +5,9 @@ import pandas as pd
 # torename
 from population_restorator.scenarios import balance as prbalance
 
-from app.helpers import (
-    SuccessGet,
-    bind_population_to_territories,
-    get_internal_territories,
-    get_population_for_child_territories,
-    get_houses_from_territories,
+from app.http_clients import (
+    SocDemoClient,
+    UrbanClient,
 )
 
 
@@ -19,26 +16,16 @@ class TerritoriesService:
 
     async def balance(self, territory_id: int):
         """ """
-        result = await get_internal_territories(territory_id)
 
-        # tobechanged
-        if not (isinstance(result, SuccessGet)):
-            return False
-        internal_territories_df = result.data
+        urban_client = UrbanClient()
 
-        result = await bind_population_to_territories(internal_territories_df)
+        # tobeaddedtrycatch i guess
 
-        # tobechanged
-        if not (isinstance(result, SuccessGet)):
-            return False
-        internal_territories_df = result.data
+        internal_territories_df = await urban_client.get_internal_territories(territory_id)
 
-        result = await get_houses_from_territories(territory_id)
+        internal_territories_df = await urban_client.bind_population_to_territories(internal_territories_df)
 
-        # tobechanged
-        #if not (isinstance(result, SuccessGet)):
-        #    return False
-        internal_houses_df = result.data
+        internal_houses_df = await urban_client.get_houses_from_territories(territory_id)
 
         # result = prbalance(100000, internal_territories_df, internal_houses_df)
 

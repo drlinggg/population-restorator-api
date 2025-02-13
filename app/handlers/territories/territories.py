@@ -1,9 +1,10 @@
 """FastApi territory related handlers are defined here"""
 
+from time import gmtime, strftime
+
 from fastapi import HTTPException, status
 from starlette import status
 
-from app.helpers import get_current_time
 from app.logic.territories import TerritoriesService, get_territories_service
 from app.schemas import (
     TerritoryBalanceResponse,
@@ -31,7 +32,9 @@ async def balance(territory_id: int):
 
     # tobechanged IDK!
     if result:
-        return TerritoryBalanceResponse(performed_at=get_current_time(), territory_id=territory_id)
+        return TerritoryBalanceResponse(
+            performed_at=str(strftime("%d-%m-%Y %H:%M:%S", gmtime())), territory_id=territory_id
+        )
     else:
         raise HTTPException(status_code=500, detail="Error contacting external service")
 
@@ -45,7 +48,7 @@ async def divide(territory_id: int):
     # todo desc
     territories_service: TerritoriesService = get_territories_service()
     await territories_service.divide(territory_id)
-    return TerritoryDivideResponse(performed_at=get_current_time(), territory_id=territory_id)
+    return TerritoryDivideResponse(performed_at=str(strftime("%d-%m-%Y %H:%M:%S", gmtime())), territory_id=territory_id)
 
 
 @territories_router.post(
@@ -57,4 +60,6 @@ async def restore(territory_id: int):
     # todo desc
     territories_service: TerritoriesService = get_territories_service()
     await territories_service.restore(territory_id)
-    return TerritoryRestoreResponse(performed_at=get_current_time(), territory_id=territory_id)
+    return TerritoryRestoreResponse(
+        performed_at=str(strftime("%d-%m-%Y %H:%M:%S", gmtime())), territory_id=territory_id
+    )
