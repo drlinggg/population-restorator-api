@@ -1,36 +1,38 @@
-[tool.poetry]
+[project]
 name = "population-restorator-api"
 version = "0.1.0"
 description = "todo"
-authors = ["Banakh Andrei <uuetsukeu@mail.ru>"]
-license = "MIT"
+authors = [
+    {name = "Banakh Andrei",email = "uuetsukeu@mail.ru"}
+]
+license = {text = "MIT"}
 readme = "README.md"
-packages = [{ include = "app" }]
+requires-python = "^3.9"
+dependencies = [
+    "fastapi (>=0.115.8,<0.116.0)",
+    "uvicorn (>=0.34.0,<0.35.0)",
+    "python-dotenv (>=1.0.1,<2.0.0)",
+    "sqlalchemy (>=2.0.38,<3.0.0)",
+    "isort (>=6.0.0,<7.0.0)",
+    "pylint (>=3.3.4,<4.0.0)",
+    "black (>=25.1.0,<26.0.0)",
+    "geojson (>=3.2.0,<4.0.0)",
+    "click (>=8.1.8,<9.0.0)",
+    "aiohttp (>=3.11.12,<4.0.0)",
+    "pandas (>=2.2.3,<3.0.0)",
+    "structlog (>=25.1.0,<26.0.0)",
+    "pyyaml (>=6.0.2,<7.0.0)",
+    "population-restorator @ file:///home/banakh/work/population-restorator-api/population-restorator",
+]
 
-[tool.poetry.dependencies]
-python = "^3.9"
-fastapi = "^0.115.6"
-uvicorn = "^0.34.0"
-python-dotenv = "^1.0.1"
-sqlalchemy = "^2.0.37"
-isort = "^5.13.2"
-pylint = "^3.3.3"
-black = "^24.10.0"
-geojson = "^3.2.0"
-click = "^8.1.8"
-aiohttp = "^3.11.11"
-pandas = "^2.2.3"
-geopandas = "^1.0.1"
-#population-restorator = {git = "git@github.com:drlinggg/population-restorator.git"}
-population-restorator = {path = "population-restorator"}
-structlog = "^25.1.0"
-pyyaml = "^6.0.2"
+[tool.poetry]
+packages = [{ include = "app" }]
 
 [tool.poetry.scripts]
 launch_population-restorator-api = "app.__main__:main"
 
 [build-system]
-requires = ["poetry-core"]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.black]
@@ -42,6 +44,7 @@ max-line-length = 120
 disable = ["duplicate-code"]
 expected-line-ending-format = "LF"
 
+
 [tool.isort]
 force_grid_wrap = 0
 lines_after_imports = 2
@@ -52,3 +55,4 @@ ensure_newline_before_comments = true
 include_trailing_comma = true
 split_on_trailing_comma = true
 py_version = 39
+

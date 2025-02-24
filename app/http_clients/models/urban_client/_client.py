@@ -96,7 +96,6 @@ class UrbanClient(BaseClient):
         formatted_territories_df.set_index("territory_id")
 
         for i in internal_territories_df["features"]:
-
             formatted_territories_df.loc[i["properties"]["territory_id"]] = {
                 "name": i["properties"]["name"],
                 "parent_id": i["properties"]["parent"]["id"],
@@ -149,7 +148,6 @@ class UrbanClient(BaseClient):
         formatted_population_df.set_index("territory_id")
 
         for i in population_df["features"]:
-
             formatted_population_df.loc[i["properties"]["territory_id"]] = {
                 "territory_id": i["properties"]["territory_id"],
                 "population": int(i["properties"]["indicators"][0]["value"]),
@@ -227,7 +225,6 @@ class UrbanClient(BaseClient):
         formatted_houses_df.set_index("house_id")
 
         for i in internal_houses_df["features"]:
-
             formatted_houses_df.loc[i["properties"]["living_building"]["id"]] = {
                 # "name": i["properties"]["name"],
                 "house_id": i["properties"]["living_building"]["id"],

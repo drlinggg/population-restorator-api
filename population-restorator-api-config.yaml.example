@@ -13,8 +13,10 @@ db:
 logging:
   level: "INFO"
   files:
-    - filename: "test.conf"
+    - filename: "logs/testinfo.conf"
       level: "INFO"
+    - filename: "logs/testerror.conf"
+      level: "ERROR"
 urban_api:
   host: "https://urban-api.idu.kanootoko.org"
   port: 443

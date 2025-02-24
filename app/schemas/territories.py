@@ -1,5 +1,5 @@
 """
-Balance, divide, restore 
+Balance, divide, restore
 responses are defined here
 """
 

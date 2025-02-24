@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 import sys
 from typing import Literal
@@ -11,7 +13,6 @@ LoggingLevel = Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 def configure_logging(
     log_level: LoggingLevel, files: dict[str, LoggingLevel] | None = None, root_logger_level: LoggingLevel = "INFO"
 ) -> structlog.stdlib.BoundLogger:
-
     level_name_mapping = {
         "DEBUG": logging.DEBUG,
         "INFO": logging.INFO,

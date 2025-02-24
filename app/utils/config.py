@@ -1,5 +1,7 @@
 """Configs are defined here"""
 
+from __future__ import annotations
+
 import os
 from collections import OrderedDict
 from dataclasses import dataclass, field
