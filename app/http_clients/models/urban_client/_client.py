@@ -88,6 +88,9 @@ class UrbanClient(BaseClient):
 
         data = await handle_request(url, params, headers)
 
+        if data is None:
+            raise ObjectNotFoundError()
+
         internal_territories_df = pd.DataFrame(data)
 
         # formatting
@@ -139,6 +142,9 @@ class UrbanClient(BaseClient):
 
         data = await handle_request(url, params, headers)
 
+        if data is None:
+            raise ObjectNotFoundError()
+
         population_df = pd.DataFrame(data)
 
         # formatting
@@ -153,7 +159,6 @@ class UrbanClient(BaseClient):
                 "population": int(i["properties"]["indicators"][0]["value"]),
             }
 
-        # print(formatted_population_df)
         return formatted_population_df
 
     @_handle_exceptions
@@ -178,6 +183,9 @@ class UrbanClient(BaseClient):
         # get population of child territories one level below for each parent territory and put it in df
         for parent_id in parent_ids:
             temp_population_df = await self.get_population_for_child_territories(parent_id)
+
+            if temp_population_df is None:
+                raise ObjectNotFoundError()
             population_df = pd.concat([population_df, temp_population_df])
 
         # merge dfs
@@ -217,6 +225,10 @@ class UrbanClient(BaseClient):
         }
 
         data = await handle_request(url, params, headers)
+        
+        if data is None:
+            raise ObjectNotFoundError()
+
         internal_houses_df = pd.DataFrame(data)
 
         # formatting

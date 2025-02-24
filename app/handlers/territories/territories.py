@@ -10,6 +10,7 @@ from app.schemas import (
     TerritoryBalanceResponse,
     TerritoryDivideResponse,
     TerritoryRestoreResponse,
+    DebugErrorResponse,
 )
 
 from .routers import territories_router
@@ -19,24 +20,23 @@ from .routers import territories_router
     "/territories/balance/{territory_id}",
     status_code=status.HTTP_201_CREATED,
     response_model=TerritoryBalanceResponse,
-    # idk mb do it another way
     responses={
-        502: {"description": "Error contacting external service"},
-    },
+        404: {"description": "Given object or its data is not found, therefore further calculations are impossible."},
+        500: {"model": DebugErrorResponse, "description": "Internal Server Error"},
+        502: {"description": "Couldn't connect to urban_api"}, 
+        503: {"description": "Service Unavailable"},
+        504: {"description": "Didn't receive a timely response from upstream server"}
+    }
 )
 async def balance(territory_id: int):
     # todo desc
     territories_service: TerritoriesService = get_territories_service()
-    # todo add debug
-    result = await territories_service.balance(territory_id)
+    await territories_service.balance(territory_id)
 
-    # tobechanged IDK!
-    if result:
-        return TerritoryBalanceResponse(
-            performed_at=str(strftime("%d-%m-%Y %H:%M:%S", gmtime())), territory_id=territory_id
-        )
-    else:
-        raise HTTPException(status_code=500, detail="Error contacting external service")
+    return TerritoryBalanceResponse(
+                performed_at=str(strftime("%d-%m-%Y %H:%M:%S", gmtime())), 
+                territory_id=territory_id
+    )
 
 
 @territories_router.post(
@@ -48,7 +48,11 @@ async def divide(territory_id: int):
     # todo desc
     territories_service: TerritoriesService = get_territories_service()
     await territories_service.divide(territory_id)
-    return TerritoryDivideResponse(performed_at=str(strftime("%d-%m-%Y %H:%M:%S", gmtime())), territory_id=territory_id)
+
+    return TerritoryDivideResponse(
+            performed_at=str(strftime("%d-%m-%Y %H:%M:%S", gmtime())), 
+            territory_id=territory_id
+    )
 
 
 @territories_router.post(
@@ -60,6 +64,8 @@ async def restore(territory_id: int):
     # todo desc
     territories_service: TerritoriesService = get_territories_service()
     await territories_service.restore(territory_id)
+
     return TerritoryRestoreResponse(
-        performed_at=str(strftime("%d-%m-%Y %H:%M:%S", gmtime())), territory_id=territory_id
+        performed_at=str(strftime("%d-%m-%Y %H:%M:%S", gmtime())), 
+        territory_id=territory_id
     )

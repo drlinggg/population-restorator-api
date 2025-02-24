@@ -7,4 +7,5 @@ from .territories import (
     TerritoryBalanceResponse,
     TerritoryDivideResponse,
     TerritoryRestoreResponse,
+    DebugErrorResponse
 )
