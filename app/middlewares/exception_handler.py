@@ -3,18 +3,17 @@
 import itertools
 import traceback
 
+from fastapi import HTTPException, Request
 from fastapi.responses import JSONResponse
-
 from starlette.middleware.base import BaseHTTPMiddleware
-from fastapi import Request, HTTPException
-
 
 from app.http_clients.common import (
-    APIError,
     APIConnectionError,
+    APIError,
     APITimeoutError,
     ObjectNotFoundError,
 )
+
 
 class ExceptionHandlerMiddleware(BaseHTTPMiddleware):
     """
@@ -32,15 +31,22 @@ class ExceptionHandlerMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         try:
             return await call_next(request)
-        
+
         except APIConnectionError as exc:
-            return JSONResponse(status_code=502, content={"detail":"Couldn't connect to urban_api"})
+            return JSONResponse(status_code=502, content={"detail": "Couldn't connect to urban_api"})
         except APITimeoutError as exc:
-            return JSONResponse(status_code=504, content={"detail":"Didn't receive a timely response from upstream server"})
+            return JSONResponse(
+                status_code=504, content={"detail": "Didn't receive a timely response from upstream server"}
+            )
         except ObjectNotFoundError as exc:
-            return JSONResponse(status_code=404, content={"detail":"Given object or its data is not found, therefore further calculations are impossible."})
+            return JSONResponse(
+                status_code=404,
+                content={
+                    "detail": "Given object or its data is not found, therefore further calculations are impossible."
+                },
+            )
         except APIError as exc:
-            return JSONResponse(status_code=503, content={"detail":"todo"})
+            return JSONResponse(status_code=503, content={"detail": "todo"})
 
         except Exception as exc:  # pylint: disable=broad-except
             error_status = 500
@@ -63,4 +69,3 @@ class ExceptionHandlerMiddleware(BaseHTTPMiddleware):
                     status_code=error_status,
                 )
             return JSONResponse({"code": error_status, "message": "exception occured"}, status_code=error_status)
-

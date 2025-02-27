@@ -198,7 +198,7 @@ class UrbanClient(BaseClient):
         Args: parent_id (int)
         Returns: dataframe with all internal houses inside this territory and child territories
 
-        index=/todo/
+        index=house_id
         house_id (int): id of current house
         todo mb add name (str)
         territory_id (int): id of territory which contains current house
@@ -225,7 +225,7 @@ class UrbanClient(BaseClient):
         }
 
         data = await handle_request(url, params, headers)
-        
+
         if data is None:
             raise ObjectNotFoundError()
 
@@ -246,3 +246,38 @@ class UrbanClient(BaseClient):
             }
 
         return formatted_houses_df
+
+    @_handle_exceptions
+    async def get_population_from_territory(self, territory_id: int, last_only=True) -> int:
+        """
+        Args: territory_id (int): id of given territory
+        Returns: amount of people on this territory
+        """
+        # getting response
+
+        indicator_id_for_population = 1
+        value_type = "real"
+
+        url = f"{self.config.host}{self.config.base_path}/territory/{territory_id}/indicator_values"
+
+        params = {
+            "territory_id": territory_id,
+            "indicator_ids": indicator_id_for_population,
+            "last_only": f"{last_only}",
+            "value_type": value_type,
+            "include_child_territories": "false",
+            "cities_only": "false",
+        }
+
+        headers = {
+            "accept": "application/json",
+        }
+
+        data = await handle_request(url, params, headers)
+
+        if data is None:
+            raise ObjectNotFoundError()
+
+        # formatting
+        population = data[0]["value"]
+        return int(population)

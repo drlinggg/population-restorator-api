@@ -16,12 +16,7 @@ def _run_uvicorn(configuration: dict[str, tp.Any]) -> tp.NoReturn:
     )
 
 
-def main(
-    # debug: bool,
-    # config_path: str,
-    # logger_verbosity: str,
-):
-    # tobedeleted
+def main():
     debug = (True,)
     config_path = "population-restorator-api-config.yaml"
     logger_verbosity = None

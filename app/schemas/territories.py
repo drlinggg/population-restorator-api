@@ -39,6 +39,7 @@ class TerritoryRestoreResponse(BaseModel):
     performed_at: str = Field(..., description="time of finishing operation", examples=["22-01-2025 09:53:46"])
     # todo
 
+
 class DebugErrorResponse(BaseModel):
     error: str
     error_type: str

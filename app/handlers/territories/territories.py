@@ -7,10 +7,10 @@ from starlette import status
 
 from app.logic.territories import TerritoriesService, get_territories_service
 from app.schemas import (
+    DebugErrorResponse,
     TerritoryBalanceResponse,
     TerritoryDivideResponse,
     TerritoryRestoreResponse,
-    DebugErrorResponse,
 )
 
 from .routers import territories_router
@@ -23,10 +23,10 @@ from .routers import territories_router
     responses={
         404: {"description": "Given object or its data is not found, therefore further calculations are impossible."},
         500: {"model": DebugErrorResponse, "description": "Internal Server Error"},
-        502: {"description": "Couldn't connect to urban_api"}, 
+        502: {"description": "Couldn't connect to urban_api"},
         503: {"description": "Service Unavailable"},
-        504: {"description": "Didn't receive a timely response from upstream server"}
-    }
+        504: {"description": "Didn't receive a timely response from upstream server"},
+    },
 )
 async def balance(territory_id: int):
     # todo desc
@@ -34,8 +34,7 @@ async def balance(territory_id: int):
     await territories_service.balance(territory_id)
 
     return TerritoryBalanceResponse(
-                performed_at=str(strftime("%d-%m-%Y %H:%M:%S", gmtime())), 
-                territory_id=territory_id
+        performed_at=str(strftime("%d-%m-%Y %H:%M:%S", gmtime())), territory_id=territory_id
     )
 
 
@@ -49,10 +48,7 @@ async def divide(territory_id: int):
     territories_service: TerritoriesService = get_territories_service()
     await territories_service.divide(territory_id)
 
-    return TerritoryDivideResponse(
-            performed_at=str(strftime("%d-%m-%Y %H:%M:%S", gmtime())), 
-            territory_id=territory_id
-    )
+    return TerritoryDivideResponse(performed_at=str(strftime("%d-%m-%Y %H:%M:%S", gmtime())), territory_id=territory_id)
 
 
 @territories_router.post(
@@ -66,6 +62,5 @@ async def restore(territory_id: int):
     await territories_service.restore(territory_id)
 
     return TerritoryRestoreResponse(
-        performed_at=str(strftime("%d-%m-%Y %H:%M:%S", gmtime())), 
-        territory_id=territory_id
+        performed_at=str(strftime("%d-%m-%Y %H:%M:%S", gmtime())), territory_id=territory_id
     )

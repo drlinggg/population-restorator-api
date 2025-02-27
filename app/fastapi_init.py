@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from app.handlers.routers import routers_list
-from app.middlewares import LoggingMiddleware, ExceptionHandlerMiddleware
+from app.middlewares import ExceptionHandlerMiddleware, LoggingMiddleware
 from app.utils import PopulationRestoratorApiConfig, configure_logging
 
 
@@ -31,7 +31,7 @@ def get_app(prefix: str = "/api") -> FastAPI:
 
     app.add_middleware(
         ExceptionHandlerMiddleware,
-        [True], #tobechanged
+        [True],  # tobechanged
     )
 
     return app
