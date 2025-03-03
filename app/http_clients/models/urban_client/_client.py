@@ -43,7 +43,6 @@ class UrbanClient(BaseClient):
     """Urban API client that uses HTTP/HTTPS as transport."""
 
     def __init__(self):
-        # todo add logger
         self.config: ApiConfig | None = config.urban_api
 
         if not (self.config.host.startswith("http")):
@@ -53,8 +52,7 @@ class UrbanClient(BaseClient):
     async def is_alive(self) -> bool:
         """Check if Urban API instance is responding."""
         # todo
-
-        return False
+        return True
 
     @_handle_exceptions
     async def get_internal_territories(self, parent_id: int) -> pd.DataFrame:
@@ -236,12 +234,14 @@ class UrbanClient(BaseClient):
         formatted_houses_df = pd.DataFrame(columns=columns)
         formatted_houses_df.set_index("house_id")
 
+        print(internal_houses_df["features"][0]["properties"]["building"])
+
         for i in internal_houses_df["features"]:
-            formatted_houses_df.loc[i["properties"]["living_building"]["id"]] = {
+            formatted_houses_df.loc[i["properties"]["building"]["id"]] = {
                 # "name": i["properties"]["name"],
-                "house_id": i["properties"]["living_building"]["id"],
+                "house_id": i["properties"]["building"]["id"],
                 "territory_id": i["properties"]["territories"][0]["id"],
-                "living_area": i["properties"]["living_building"]["living_area"],
+                "living_area": i["properties"]["building"]["properties"]["living_area_official"],
                 "geometry": i["geometry"],
             }
 
