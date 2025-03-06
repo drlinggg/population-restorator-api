@@ -1,5 +1,8 @@
 # todo desc
+
 from __future__ import annotations
+
+import os
 
 import pandas as pd
 
@@ -10,6 +13,10 @@ from app.http_clients import (
     SocDemoClient,
     UrbanClient,
 )
+from app.utils import PopulationRestoratorApiConfig
+
+
+config = PopulationRestoratorApiConfig.from_file_or_default(os.getenv("CONFIG_PATH"))
 
 
 class TerritoriesService:
@@ -28,11 +35,12 @@ class TerritoriesService:
         # internal_territories_df.to_csv("population-restorator/sample_data/balancer/territories.csv", index=False)
         # internal_houses_df.to_csv("population-restorator/sample_data/balancer/houses.csv", index=False)
 
-        result = prbalance(
+        # 545,555 error sys1 exit
+        prbalance(
             population,
             internal_territories_df,
             internal_houses_df,
-            1,
+            config.app.debug,
             "population-restorator/output/territories.json",
             "population-restorator/output/houses.json",
         )

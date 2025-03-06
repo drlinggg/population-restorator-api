@@ -8,16 +8,13 @@ from app.utils import ApiConfig, AppConfig, LoggingConfig, PopulationRestoratorA
 
 
 def _run_uvicorn(configuration: dict[str, tp.Any]) -> tp.NoReturn:
-    # todo make debug mode with reload = true/false
     uvicorn.run(
         "app:app",
-        reload=True,
         **configuration,
     )
 
 
 def main():
-    debug = (True,)
     config_path = "population-restorator-api-config.yaml"
     logger_verbosity = None
 

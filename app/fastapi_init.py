@@ -1,5 +1,6 @@
 # todo desc
 
+import multiprocessing
 import os
 from contextlib import asynccontextmanager
 
@@ -7,11 +8,13 @@ from fastapi import FastAPI
 
 from app.handlers.routers import routers_list
 from app.middlewares import ExceptionHandlerMiddleware, LoggingMiddleware
-from app.utils import PopulationRestoratorApiConfig, configure_logging
+from app.utils import PopulationRestoratorApiConfig, configure_logging, start_redis_queue, start_rq_worker
 
 
 def get_app(prefix: str = "/api") -> FastAPI:
     desc = "todo"
+
+    app_config = PopulationRestoratorApiConfig.from_file_or_default(os.getenv("CONFIG_PATH"))
 
     app = FastAPI(
         title="Population-restorator-api",
@@ -29,10 +32,7 @@ def get_app(prefix: str = "/api") -> FastAPI:
         LoggingMiddleware,
     )
 
-    app.add_middleware(
-        ExceptionHandlerMiddleware,
-        [True],  # tobechanged
-    )
+    app.add_middleware(ExceptionHandlerMiddleware, debug=(app_config.app.debug,))
 
     return app
 
@@ -47,7 +47,13 @@ async def lifespan(app: FastAPI):
     logger = configure_logging(app_config.logging.level, loggers_dict)
     app.state.logger = logger
 
+    app.state.redis, app.state.queue = start_redis_queue()
+    rq_worker_process = multiprocessing.Process(target=start_rq_worker)
+    rq_worker_process.start()
+
     yield
+
+    rq_worker_process.terminate()
 
 
 app = get_app()

@@ -68,4 +68,4 @@ class ExceptionHandlerMiddleware(BaseHTTPMiddleware):
                     },
                     status_code=error_status,
                 )
-            return JSONResponse({"code": error_status, "message": "exception occured"}, status_code=error_status)
+            return JSONResponse({"message": "exception occured"}, status_code=error_status)

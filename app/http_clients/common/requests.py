@@ -19,10 +19,10 @@ async def handle_request(url: str, params: dict[str, any] = {}, headers: dict[st
     Returns response for given url, params & headers request
     """
 
-    async with aiohttp.ClientSession(headers=headers, timeout=aiohttp.ClientTimeout(total=15)) as session:
+    async with aiohttp.ClientSession(headers=headers) as session:
         async with session.get(url=url, params=params) as response:
             logger.info(
-                f"request sent: {{request: {url}, params: {params}, headers: {headers}, status: {response.status} }}"
+                f"sent request: {{request: {url}, params: {params}, headers: {headers}, status: {response.status} }}"
             )
 
             if response.status == 404:

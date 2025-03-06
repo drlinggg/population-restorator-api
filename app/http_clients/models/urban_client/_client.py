@@ -232,18 +232,19 @@ class UrbanClient(BaseClient):
         # formatting
         columns = ["house_id", "territory_id", "living_area", "geometry"]
         formatted_houses_df = pd.DataFrame(columns=columns)
-        formatted_houses_df.set_index("house_id")
-
-        print(internal_houses_df["features"][0]["properties"]["building"])
+        formatted_houses_df.set_index("house_id", inplace=True)
 
         for i in internal_houses_df["features"]:
-            formatted_houses_df.loc[i["properties"]["building"]["id"]] = {
-                # "name": i["properties"]["name"],
-                "house_id": i["properties"]["building"]["id"],
-                "territory_id": i["properties"]["territories"][0]["id"],
-                "living_area": i["properties"]["building"]["properties"]["living_area_official"],
-                "geometry": i["geometry"],
-            }
+            try:
+                formatted_houses_df.loc[i["properties"]["building"]["id"]] = {
+                    # "name": i["properties"]["name"],
+                    "house_id": i["properties"]["building"]["id"],
+                    "territory_id": i["properties"]["territories"][0]["id"],
+                    "living_area": i["properties"]["building"]["properties"]["living_area_official"],
+                    "geometry": i["geometry"],
+                }
+            except TypeError:
+                continue
 
         return formatted_houses_df
 

@@ -3,10 +3,13 @@ Balance, divide, restore
 responses are defined here
 """
 
+from typing import Optional
+
 from pydantic import BaseModel, Field
 from typing_extensions import Annotated
 
 
+# todo unite these schemas
 class TerritoryBalanceResponse(BaseModel):
     territory_id: int = Field(
         ...,
@@ -46,3 +49,14 @@ class DebugErrorResponse(BaseModel):
     path: str
     params: str
     trace: str
+
+
+class JobResponse(BaseModel):
+    job_id: str
+    status: str
+    result: Optional[TerritoryBalanceResponse]
+
+
+class JobCreatedResponse(BaseModel):
+    job_id: str
+    status: str

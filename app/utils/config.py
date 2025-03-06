@@ -121,12 +121,14 @@ class PopulationRestoratorApiConfig:
         """Generate an example of configuration."""
 
         return cls(
-            app=AppConfig(host="0.0.0.0", port=8000, debug=False, name="urban_api"),
+            app=AppConfig(host="0.0.0.0", port=8000, debug=False, name="population-restorator-api"),
             db=DBConfig(
                 addr="localhost", port=5432, name="urban_db", user="postgres", password="postgres", pool_size=15
             ),
             logging=LoggingConfig(level="INFO"),
-            urban_api=ApiConfig(host="todo", port=443, api_key="todo", base_path="/api/v1"),
+            urban_api=ApiConfig(
+                host="https://urban-api.idu.kanootoko.org", port=443, api_key="todo", base_path="/api/v1"
+            ),
             socdemo_api=ApiConfig(host="todo", port=443, api_key="todo", base_path="/api/v1"),
         )
 
