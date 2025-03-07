@@ -4,3 +4,4 @@ myenv/
 output/
 *.conf
 *.yaml
+*.rdb

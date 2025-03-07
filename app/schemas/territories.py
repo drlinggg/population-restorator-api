@@ -11,34 +11,17 @@ from typing_extensions import Annotated
 
 # todo unite these schemas
 class TerritoryBalanceResponse(BaseModel):
-    territory_id: int = Field(
-        ...,
-        gt=0,
-        description="id of territory that inner territories were balanced",
-        examples=["7"],
-    )
     performed_at: str = Field(..., description="time of finishing operation", examples=["22-01-2025 09:53:46"])
     # todo
 
 
 class TerritoryDivideResponse(BaseModel):
-    territory_id: int = Field(
-        ...,
-        gt=0,
-        description="id of territory that inner territories were divided",
-        examples=["7"],
-    )
     performed_at: str = Field(..., description="time of finishing operation", examples=["22-01-2025 09:53:46"])
     # todo
 
 
 class TerritoryRestoreResponse(BaseModel):
-    territory_id: int = Field(
-        ...,
-        gt=0,
-        description="id of territory that inner territories restored",
-        examples=["7"],
-    )
+
     performed_at: str = Field(..., description="time of finishing operation", examples=["22-01-2025 09:53:46"])
     # todo
 
@@ -55,7 +38,6 @@ class JobResponse(BaseModel):
     job_id: str
     status: str
     result: Optional[TerritoryBalanceResponse]
-
 
 class JobCreatedResponse(BaseModel):
     job_id: str
