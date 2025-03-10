@@ -22,5 +22,6 @@ def try_load_envfile(envfile: str) -> bool:
             if name not in os.environ:
                 if " #" in value:
                     value = value[: value.index(" #")]
+                print(name, value)
                 os.environ[name] = value.strip()
     return True

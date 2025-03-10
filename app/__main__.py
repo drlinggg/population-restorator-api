@@ -4,7 +4,7 @@ import typing as tp
 
 import uvicorn
 
-from app.utils import ApiConfig, AppConfig, LoggingConfig, PopulationRestoratorApiConfig
+from app.utils import ApiConfig, AppConfig, LoggingConfig, PopulationRestoratorApiConfig, RedisQueueConfig
 
 
 def _run_uvicorn(configuration: dict[str, tp.Any]) -> tp.NoReturn:
@@ -15,11 +15,9 @@ def _run_uvicorn(configuration: dict[str, tp.Any]) -> tp.NoReturn:
 
 
 def main():
-    config_path = "population-restorator-api-config.yaml"
-    logger_verbosity = None
-
-    config = PopulationRestoratorApiConfig.load(config_path)
-    logging_section = config.logging if logger_verbosity is None else LoggingConfig(level=logger_verbosity)
+    # it does triple reading rn but i dont sure if its bad
+    config = PopulationRestoratorApiConfig.from_file_or_default()
+    logging_section = config.logging
 
     config = PopulationRestoratorApiConfig(
         app=AppConfig(
@@ -28,7 +26,13 @@ def main():
             debug=config.app.debug,
             name=config.app.name,
         ),
-        db=config.db,
+        db=config.db,  # wtf todo rewrite
+        redis_queue=RedisQueueConfig(
+            host=config.redis_queue.host,
+            port=config.redis_queue.port,
+            db=config.redis_queue.db,
+            queue_name=config.redis_queue.queue_name,
+        ),
         logging=logging_section,
         urban_api=ApiConfig(
             host=config.urban_api.host,

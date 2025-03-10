@@ -10,7 +10,6 @@ from app.utils import PopulationRestoratorApiConfig
 from .exceptions import InvalidStatusCode
 
 
-config = PopulationRestoratorApiConfig.from_file_or_default(os.getenv("CONFIG_PATH"))
 logger = structlog.getLogger()
 
 

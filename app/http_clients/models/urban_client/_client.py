@@ -25,6 +25,11 @@ logger = structlog.getLogger()
 
 
 def _handle_exceptions(func: Callable) -> Callable:
+    """
+    This decorator is used to handle aiohttp exceptions
+    and pass them into the middleware exception handler
+    """
+
     @wraps(func)
     async def _wrapper(*args, **kwargs):
         try:
@@ -49,10 +54,14 @@ class UrbanClient(BaseClient):
             logger.warning("http/https schema is not set, defaulting to http")
             self.config.host = f"http://{self.config.host}"
 
-    async def is_alive(self) -> bool:
-        """Check if Urban API instance is responding."""
-        # todo
-        return True
+    def is_alive(self) -> bool:
+
+        url = f"{self.config.host}{self.config.bash_path}/health_check/ping"
+
+        result = handle_request(url)
+
+        if result:
+            return True
 
     @_handle_exceptions
     async def get_internal_territories(self, parent_id: int) -> pd.DataFrame:
@@ -171,9 +180,7 @@ class UrbanClient(BaseClient):
         """
 
         # save all unique parent_ids in dataframe
-        parent_ids = set()
-        for parent_id in territories_df["parent_id"]:
-            parent_ids.add(parent_id)
+        parent_ids = {parent_id for parent_id in territories_df["parent_id"]}
 
         population_df = pd.DataFrame(columns=["territory_id", "population"])
         population_df.set_index("territory_id")
@@ -209,13 +216,16 @@ class UrbanClient(BaseClient):
         """
 
         # getting response
+
+        house_type = "4"
+
         url = f"{self.config.host}{self.config.base_path}/territory/{territory_parent_id}/physical_objects_geojson"
 
         params = {
             "territory_id": territory_parent_id,
             "include_child_territories": "true",
             "cities_only": "true",
-            "physical_object_type_id": "4",
+            "physical_object_type_id": house_type,
         }
 
         headers = {
@@ -243,13 +253,13 @@ class UrbanClient(BaseClient):
                     "living_area": i["properties"]["building"]["properties"]["living_area_official"],
                     "geometry": i["geometry"],
                 }
-            except TypeError:
+            except TypeError:  # tobefixed
                 continue
 
         return formatted_houses_df
 
     @_handle_exceptions
-    async def get_population_from_territory(self, territory_id: int, last_only=True) -> int:
+    async def get_population_from_territory(self, territory_id: int, last_only: bool = True) -> int:
         """
         Args: territory_id (int): id of given territory
         Returns: amount of people on this territory

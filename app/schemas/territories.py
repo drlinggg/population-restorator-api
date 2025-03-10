@@ -21,19 +21,20 @@ class TerritoryDivideResponse(BaseModel):
 
 
 class TerritoryRestoreResponse(BaseModel):
-
     performed_at: str = Field(..., description="time of finishing operation", examples=["22-01-2025 09:53:46"])
     # todo
 
 
 class DebugErrorResponse(BaseModel):
+    detail: str = "Exception occured"
     error: str
     error_type: str
     path: str
-    params: str
     trace: str
 
-class JobErrorResponse(BaseModel):
+
+class DebugJobErrorResponse(BaseModel):
+    detail: str = "Exception occured"
     job_id: str
     error: str
     error_type: str
@@ -45,6 +46,7 @@ class JobResponse(BaseModel):
     job_id: str
     status: str
     result: Optional[TerritoryBalanceResponse]
+
 
 class JobCreatedResponse(BaseModel):
     job_id: str

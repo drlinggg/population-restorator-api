@@ -17,7 +17,7 @@ from app.http_clients.common import (
 from app.utils import PopulationRestoratorApiConfig
 
 
-config = PopulationRestoratorApiConfig.from_file_or_default(os.getenv("CONFIG_PATH"))
+# config = PopulationRestoratorApiConfig.from_file_or_default(os.getenv("CONFIG_PATH"))
 
 
 class SocDemoClient(BaseClient):

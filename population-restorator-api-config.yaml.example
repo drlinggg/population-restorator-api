@@ -17,6 +17,11 @@ logging:
       level: "INFO"
     - filename: "logs/testerror.conf"
       level: "ERROR"
+redis_queue:
+  host: "localhost"
+  port: 6379
+  db: 0
+  queue_name: "default"
 urban_api:
   host: "https://urban-api.idu.kanootoko.org"
   port: 443
@@ -27,4 +32,3 @@ socdemo_api:
   port: 443
   api_key: null
   base_path: "/api/v1"
-

@@ -1,5 +1,6 @@
 # todo desc
 
+import dataclasses
 import multiprocessing
 import os
 from contextlib import asynccontextmanager
@@ -47,8 +48,10 @@ async def lifespan(app: FastAPI):
     logger = configure_logging(app_config.logging.level, loggers_dict)
     app.state.logger = logger
 
-    app.state.redis, app.state.queue = start_redis_queue()
-    rq_worker_process = multiprocessing.Process(target=start_rq_worker)
+    # todo add manage amount of workers
+    host, port, db, queue_name = dataclasses.astuple(app_config.redis_queue)
+    app.state.redis, app.state.queue = start_redis_queue(host=host, port=port, db=db)
+    rq_worker_process = multiprocessing.Process(target=start_rq_worker, args=(host, port, db, queue_name))
     rq_worker_process.start()
 
     yield

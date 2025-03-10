@@ -15,6 +15,7 @@ from .logging import LoggingLevel
 
 @dataclass
 class AppConfig:
+    # todo desc
     host: str
     port: int
     debug: bool
@@ -22,6 +23,15 @@ class AppConfig:
 
     def __post_init__(self):
         self.name = f"population-restorator-api (//todo apiversion//)"
+
+
+@dataclass
+class RedisQueueConfig:
+    # todo desc
+    host: str
+    port: str
+    db: int
+    queue_name: str
 
 
 @dataclass
@@ -47,6 +57,7 @@ class DBConfig:
 
 @dataclass
 class FileLogger:
+    # todo desc
     filename: str
     level: LoggingLevel
 
@@ -64,6 +75,7 @@ class LoggingConfig:
 @dataclass
 class PopulationRestoratorApiConfig:
     app: AppConfig
+    redis_queue: RedisQueueConfig
     db: DBConfig
     logging: LoggingConfig
     urban_api: ApiConfig
@@ -86,6 +98,7 @@ class PopulationRestoratorApiConfig:
         return OrderedDict(
             [
                 ("app", to_ordered_dict_recursive(self.app)),
+                ("redis_queue", to_ordered_dict_recursive(self.redis_queue)),
                 ("db", to_ordered_dict_recursive(self.db)),
                 ("logging", to_ordered_dict_recursive(self.logging)),
                 ("urban_api", to_ordered_dict_recursive(self.urban_api)),
@@ -121,7 +134,8 @@ class PopulationRestoratorApiConfig:
         """Generate an example of configuration."""
 
         return cls(
-            app=AppConfig(host="0.0.0.0", port=8000, debug=False, name="population-restorator-api"),
+            app=AppConfig(host="0.0.0.0", port=8000, debug=True, name="population-restorator-api"),
+            redis_queue=RedisQueueConfig(host="localhost", port="6379", db=0, queue_name="default"),
             db=DBConfig(
                 addr="localhost", port=5432, name="urban_db", user="postgres", password="postgres", pool_size=15
             ),
@@ -145,6 +159,7 @@ class PopulationRestoratorApiConfig:
 
             return cls(
                 app=AppConfig(**data.get("app", {})),
+                redis_queue=RedisQueueConfig(**data.get("redis_queue", {})),
                 db=DBConfig(**data.get("db", {})),
                 logging=LoggingConfig(**data.get("logging", {})),
                 urban_api=ApiConfig(**data.get("urban_api", {})),
