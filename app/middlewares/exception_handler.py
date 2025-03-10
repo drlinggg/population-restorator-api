@@ -14,6 +14,8 @@ from app.http_clients.common import (
     ObjectNotFoundError,
 )
 
+from app.utils import JobError
+
 import structlog
 
 import uuid
@@ -57,6 +59,26 @@ class ExceptionHandlerMiddleware(BaseHTTPMiddleware):
             logger.error("status: 503, content: todo")
             return JSONResponse(status_code=503, content={"detail": "todo"})
 
+        except JobError as exc:
+            trace = exc.exc_info.split("\n")
+            logger.error(f"status: 502, content: {{ detail: Job failed, job_id: {exc.job_id}, error: {str(exc.exc_value)}, error_type {str(exc.exc_type)}, path: {request.url.query}, trace: {trace} }}")
+
+            if self._debug[0]:
+                return JSONResponse(
+                        {
+                            "job_id": exc.job_id,
+                            "error": str(exc.exc_value),
+                            "error_type": str(exc.exc_type),
+                            "path": request.url.path,
+                            "params": request.url.query,
+                            "trace": trace
+                        },
+                        status_code=502
+                )
+
+            return JSONResponse(status_code=502, content={"detail: job failed, job_id: {exc.job_id}"})
+
+
         except Exception as exc:  # pylint: disable=broad-except
             error_status = 500
             trace = list(itertools.chain.from_iterable(map(lambda x: x.split("\n"), traceback.format_tb(exc.__traceback__))))
@@ -77,4 +99,4 @@ class ExceptionHandlerMiddleware(BaseHTTPMiddleware):
                     },
                     status_code=error_status,
                 )
-            return JSONResponse({"message": "exception occured"}, status_code=error_status)
+            return JSONResponse({"detail": "exception occured"}, status_code=error_status)

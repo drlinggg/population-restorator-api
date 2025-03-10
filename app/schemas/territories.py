@@ -33,6 +33,13 @@ class DebugErrorResponse(BaseModel):
     params: str
     trace: str
 
+class JobErrorResponse(BaseModel):
+    job_id: str
+    error: str
+    error_type: str
+    path: str
+    trace: str
+
 
 class JobResponse(BaseModel):
     job_id: str

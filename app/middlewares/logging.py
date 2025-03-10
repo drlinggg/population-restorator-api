@@ -17,9 +17,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):  # pylint: disable=too-few-public-m
         request_id = uuid.uuid4()
         logger: structlog.stdlib.BoundLogger = request.app.state.logger
         logger = logger.bind(request_id=str(request_id))
-        request.state.logger = logger
-        # todo make one standard here
-        request.state.logger.info(f'got request: {{host: {dict(request.headers.items())["host"]}}}')
+        request.app.state.logger.info(f'got request: {{host: {dict(request.headers.items())["host"]}}}')
 
         response = await call_next(request)
 
