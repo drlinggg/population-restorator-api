@@ -222,16 +222,16 @@ class UrbanClient(BaseClient):
         formatted_houses_df.set_index("house_id", inplace=True)
 
         for i in internal_houses_df["features"]:
-            try:
-                formatted_houses_df.loc[i["properties"]["building"]["id"]] = {
-                    # "name": i["properties"]["name"],
-                    "house_id": i["properties"]["building"]["id"],
-                    "territory_id": i["properties"]["territories"][0]["id"],
-                    "living_area": i["properties"]["building"]["properties"]["living_area_official"],
-                    "geometry": i["geometry"],
-                }
-            except TypeError:  # tobefixed
-                continue
+            living_area_modeled = i["properties"]["building"]["properties"]["living_area_modeled"]
+            living_area_official = i["properties"]["building"]["properties"]["living_area_official"]
+
+            formatted_houses_df.loc[i["properties"]["building"]["id"]] = {
+                # "name": i["properties"]["name"],
+                "house_id": i["properties"]["building"]["id"],
+                "territory_id": i["properties"]["territories"][0]["id"],
+                "living_area": living_area_modeled if living_area_modeled is not None else living_area_official,
+                "geometry": i["geometry"],
+            }
 
         return formatted_houses_df
 

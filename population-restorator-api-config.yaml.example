@@ -13,9 +13,9 @@ db:
 logging:
   level: "INFO"
   files:
-    - filename: "logs/testinfo.conf"
+    - filename: "logs/testinfo.log"
       level: "INFO"
-    - filename: "logs/testerror.conf"
+    - filename: "logs/testerror.log"
       level: "ERROR"
 redis_queue:
   host: "localhost"
@@ -28,7 +28,7 @@ urban_api:
   api_key: null
   base_path: "/api/v1"
 socdemo_api:
-  host: "TODO"
+  host: "https://socdemo.lok-tech.com"
   port: 443
   api_key: null
   base_path: "/api/v1"

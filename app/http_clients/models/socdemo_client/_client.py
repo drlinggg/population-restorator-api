@@ -21,7 +21,6 @@ from app.utils import PopulationRestoratorApiConfig
 config = PopulationRestoratorApiConfig.from_file_or_default(os.getenv("CONFIG_PATH"))
 logger = structlog.getLogger()
 
-
 class SocDemoClient(BaseClient):
 
     def __init__(self):
