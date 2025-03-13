@@ -3,6 +3,7 @@ from .exceptions import (
     APIError,
     APITimeoutError,
     ObjectNotFoundError,
+    handle_exceptions,
 )
 from .http_client import (
     BaseClient,

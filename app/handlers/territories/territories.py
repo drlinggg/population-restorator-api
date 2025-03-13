@@ -3,7 +3,6 @@
 from datetime import datetime, timezone
 
 from fastapi import HTTPException, Request, status
-from starlette import status
 
 from app.http_clients.common.exceptions import (
     APIConnectionError,
@@ -132,7 +131,9 @@ async def balance(request: Request, territory_id: int):
                         "Population-restorator default": {
                             "value": {"job_id": "adaa6536-aa1f-45e5-8cee-2cc03694ae8e", "detail": "Exception occured"}
                         },
-                        "Couldn't connect to urban_api": {"value": {"detail": "couldn't connect to urban_api"}},
+                        "Couldn't connect to upstream server": {
+                            "value": {"detail": "couldn't connect to upstream server"}
+                        },
                     }
                 }
             },
@@ -146,9 +147,7 @@ async def balance(request: Request, territory_id: int):
             "content": {
                 "application/json": {
                     "examples": {
-                        "Default": {
-                            "value": {"detail": "Didn't receive a timely response from upstream urban_api server"}
-                        }
+                        "Default": {"value": {"detail": "Didn't receive a timely response from upstream server"}}
                     }
                 }
             },

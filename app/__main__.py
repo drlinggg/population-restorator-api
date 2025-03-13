@@ -4,7 +4,7 @@ import typing as tp
 
 import uvicorn
 
-from app.utils import ApiConfig, AppConfig, LoggingConfig, PopulationRestoratorApiConfig, RedisQueueConfig
+from app.utils import ApiConfig, AppConfig, PopulationRestoratorApiConfig, RedisQueueConfig
 
 
 def _run_uvicorn(configuration: dict[str, tp.Any]) -> tp.NoReturn:

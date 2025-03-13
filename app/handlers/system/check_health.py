@@ -3,7 +3,6 @@ health_check handler is defined here.
 """
 
 import asyncio
-import time
 
 from starlette import status
 

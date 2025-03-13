@@ -1,17 +1,7 @@
-import json
-import os
-import uuid
-
 import aiohttp
 import structlog
 
-from app.utils import PopulationRestoratorApiConfig
-
 from .exceptions import InvalidStatusCode
-
-
-logger = structlog.getLogger()
-
 
 async def handle_request(url: str, params: dict[str, any] = {}, headers: dict[str, any] = {}) -> dict:
     """
@@ -20,6 +10,7 @@ async def handle_request(url: str, params: dict[str, any] = {}, headers: dict[st
 
     async with aiohttp.ClientSession(headers=headers) as session:
         async with session.get(url=url, params=params) as response:
+            logger = structlog.getLogger()
             logger.info(
                 f"sent request: {{request: {url}, params: {params}, headers: {headers}, status: {response.status} }}"
             )

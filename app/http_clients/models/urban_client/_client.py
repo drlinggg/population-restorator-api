@@ -1,20 +1,14 @@
-import abc
-import asyncio
-import json
 import os
-from dataclasses import dataclass
-from functools import wraps
-from typing import Callable
 
 import pandas as pd
 import structlog
-from aiohttp import ClientConnectionError, ClientSession, ClientTimeout
 
 from app.http_clients.common import (
     APIConnectionError,
     APITimeoutError,
     BaseClient,
     ObjectNotFoundError,
+    handle_exceptions,
     handle_request,
 )
 from app.utils import PopulationRestoratorApiConfig
@@ -22,26 +16,6 @@ from app.utils import PopulationRestoratorApiConfig
 
 config = PopulationRestoratorApiConfig.from_file_or_default(os.getenv("CONFIG_PATH"))
 logger = structlog.getLogger()
-
-
-def _handle_exceptions(func: Callable) -> Callable:
-    """
-    This decorator is used to handle aiohttp exceptions
-    and pass them into the middleware exception handler
-    """
-
-    @wraps(func)
-    async def _wrapper(*args, **kwargs):
-        try:
-            return await func(*args, **kwargs)
-        except ClientConnectionError as exc:
-            logger.error(f"failed to send request, status {exc}")
-            raise APIConnectionError("Error on connection to Urban API") from exc
-        except asyncio.exceptions.TimeoutError as exc:
-            logger.error(f"failed to connect to {url}: {exc}")
-            raise APITimeoutError("Timeout expired on Urban API request") from exc
-
-    return _wrapper
 
 
 class UrbanClient(BaseClient):
@@ -63,7 +37,10 @@ class UrbanClient(BaseClient):
         if result:
             return True
 
-    @_handle_exceptions
+    def __str__(self):
+        return "UrbanClient"
+
+    @handle_exceptions
     async def get_internal_territories(self, parent_id: int) -> pd.DataFrame:
         """
         Args: parent_id
@@ -116,7 +93,7 @@ class UrbanClient(BaseClient):
 
         return formatted_territories_df
 
-    @_handle_exceptions
+    @handle_exceptions
     async def get_population_for_child_territories(self, parent_id: int) -> pd.DataFrame:
         """
         Args: parent_id
@@ -168,7 +145,7 @@ class UrbanClient(BaseClient):
 
         return formatted_population_df
 
-    @_handle_exceptions
+    @handle_exceptions
     async def bind_population_to_territories(self, territories_df: pd.DataFrame) -> pd.DataFrame:
         """
         Args: territories dataframe
@@ -258,7 +235,7 @@ class UrbanClient(BaseClient):
 
         return formatted_houses_df
 
-    @_handle_exceptions
+    @handle_exceptions
     async def get_population_from_territory(self, territory_id: int, last_only: bool = True) -> int:
         """
         Args: territory_id (int): id of given territory

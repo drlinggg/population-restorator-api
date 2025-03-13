@@ -6,7 +6,6 @@ responses are defined here
 from typing import Optional
 
 from pydantic import BaseModel, Field
-from typing_extensions import Annotated
 
 
 # todo unite these schemas

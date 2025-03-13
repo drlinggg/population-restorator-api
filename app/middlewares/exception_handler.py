@@ -2,10 +2,9 @@
 
 import itertools
 import traceback
-import uuid
 
 import structlog
-from fastapi import HTTPException, Request
+from fastapi import Request
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
@@ -40,16 +39,21 @@ class ExceptionHandlerMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
 
         except APIConnectionError as exc:
-            logger.error("status: 502, content: Couldn't connect to urban_api")
-            return JSONResponse(status_code=502, content={"detail": "Couldn't connect to urban_api"})
+            logger.error(f"status: 502, detail: {{content: Couldn't connect to upstream server, info: {str(exc)}}}")
+            return JSONResponse(status_code=502, content={"detail": "Couldn't connect to upstream server"})
         except APITimeoutError as exc:
-            logger.error("status: 504, content: Didn't receive a timely response from upstream server")
+            logger.error(
+                f"status: 504, detail: {{content: Didn't receive a timely response from upstream server, info: {str(exc)}}}"
+            )
             return JSONResponse(
                 status_code=504, content={"detail": "Didn't receive a timely response from upstream server"}
             )
         except ObjectNotFoundError as exc:
             logger.error(
-                f"status: 404, content: Given object or its data is not found, therefore further calculations are impossible."
+                f"status: 404, detail: {{ "
+                f"content: Given object or its data is not found, "
+                f"therefore further calculations are impossible, "
+                f"info: {str(exc)}}}"
             )
             return JSONResponse(
                 status_code=404,
@@ -63,9 +67,15 @@ class ExceptionHandlerMiddleware(BaseHTTPMiddleware):
 
         except JobError as exc:
             trace = exc.exc_info  # todo fix \n formatting
-            print(trace)
+
             logger.error(
-                f"status: 502, content: {{ detail: Job failed, job_id: {exc.job_id}, error: {str(exc.exc_value)}, error_type {str(exc.exc_type)}, path: {request.url.query}, trace: {trace} }}"
+                f"status: 502, content: {{ "
+                f"detail: Job failed, "
+                f"job_id: {exc.job_id}, "
+                f"error: {str(exc.exc_value)}, "
+                f"error_type: {str(exc.exc_type)}, "
+                f"path: {request.url.query}, "
+                f"trace: {trace} }}"
             )
 
             if self._debug[0]:

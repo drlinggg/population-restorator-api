@@ -18,3 +18,6 @@ class BaseClient(abc.ABC):
     async def get_version(self) -> str | None:
         """Get API version if appliable."""
         return None
+
+    def __str__(self):
+        pass
