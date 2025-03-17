@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 
 from typing import Optional
 
-from fastapi import HTTPException, Request, status
+from fastapi import HTTPException, Request, status, Query
 
 from app.http_clients.common.exceptions import (
     APIConnectionError,
@@ -19,9 +19,7 @@ from app.schemas import (
     DebugJobErrorResponse,
     JobCreatedResponse,
     JobResponse,
-    TerritoryBalanceResponse,
-    TerritoryDivideResponse,
-    TerritoryRestoreResponse,
+    TerritoryResponse,
 )
 from app.utils import JobError
 
@@ -45,7 +43,8 @@ FOREIGN_API_EXCEPTIONS = [
         500: {"model": DebugErrorResponse, "description": "Internal Server Error"},
     },  # todo
 )
-async def balance(request: Request, territory_id: int):
+async def balance(request: Request, 
+                  territory_id: int):
     # todo desc
 
     territories_service: TerritoriesService = get_territories_service()
@@ -59,21 +58,26 @@ async def balance(request: Request, territory_id: int):
     response_model=JobCreatedResponse,
     responses={
         500: {"model": DebugErrorResponse, "description": "Internal Server Error"},
+        400: {"description": "Previous job {job_id} is not finished yet"},
+        404: {"description": "Previous job {job_id} not found"}
     },  # todo
 )
-async def divide(request: Request, territory_id: int, from_previous: Optional[str] = None):
+async def divide(request: Request,
+                 territory_id: int,
+                 from_previous: str = Query(None, description="id of balance job which calculations would be used")):
     # todo desc
     territories_service: TerritoriesService = get_territories_service()
 
-    if from_previous is not None:
-        prev_job = request.app.state.config.redis_queue.fetch_job(from_previous)
-        job = request.app.state.queue.enqueue(territories_service.divide,
-                                          territory_id,
-                                          prev_job)
+    prev_job = request.app.state.queue.fetch_job(from_previous) if from_previous else None
 
+    if from_previous is None:
+        job = request.app.state.queue.enqueue(territories_service.divide, territory_id)
+    elif prev_job and prev_job.is_finished:
+        job = request.app.state.queue.enqueue(territories_service.divide, territory_id, prev_job.return_value())
+    elif prev_job and not prev_job.is_finished:
+        raise HTTPException(status_code=400, detail=f"Previous job {from_previous} is not finished yet.")
     else:
-        job = request.app.state.queue.enqueue(territories_service.divide,
-                                          territory_id)
+        raise HTTPException(status_code=404, detail=f"Previous job {from_previous} not found.")
 
     return JobCreatedResponse(job_id=job.id, status="Queued")
 
@@ -178,7 +182,7 @@ async def get_status(request: Request, job_id: str):
         return JobResponse(
             job_id=job.id,
             status=job.get_status(),
-            result=TerritoryBalanceResponse(performed_at=str(datetime.now(timezone.utc))),
+            result=TerritoryResponse(performed_at=str(datetime.now(timezone.utc))),
         )
 
     if job.is_failed:

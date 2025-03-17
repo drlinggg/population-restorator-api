@@ -65,7 +65,7 @@ class SocDemoClient(BaseClient):
             raise ObjectNotFoundError()
 
         pyramids = pd.DataFrame(data)
-        latest_pyramid = pyramids.loc[pyramids["year"] == max(pyramids["year"])]
+        latest_pyramid = pyramids.loc[pyramids["year"] == max(pyramids["year"])].iloc[0]
 
         # formatting
 
@@ -73,7 +73,9 @@ class SocDemoClient(BaseClient):
         women: list[int] = list()
         indexes: list[str] = list()
 
-        for item in latest_pyramid["data"].iloc[0]:
+        #keyerror territory_id 2, okay 1
+
+        for item in latest_pyramid["data"]:
             index_start, index_end, men_amount, women_amount = (item["age_start"],
                                                                 item["age_end"] if item["age_end"] is not None else 130,
                                                                 int(item["male"]) if item["male"] is not None else 0,

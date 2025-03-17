@@ -7,19 +7,7 @@ from typing import Optional
 
 from pydantic import BaseModel, Field
 
-
-# todo unite these schemas
-class TerritoryBalanceResponse(BaseModel):
-    performed_at: str = Field(..., description="time of finishing operation", examples=["22-01-2025 09:53:46"])
-    # todo
-
-
-class TerritoryDivideResponse(BaseModel):
-    performed_at: str = Field(..., description="time of finishing operation", examples=["22-01-2025 09:53:46"])
-    # todo
-
-
-class TerritoryRestoreResponse(BaseModel):
+class TerritoryResponse(BaseModel):
     performed_at: str = Field(..., description="time of finishing operation", examples=["22-01-2025 09:53:46"])
     # todo
 
@@ -44,7 +32,7 @@ class DebugJobErrorResponse(BaseModel):
 class JobResponse(BaseModel):
     job_id: str
     status: str
-    result: Optional[TerritoryBalanceResponse]
+    result: Optional[TerritoryResponse]
 
 
 class JobCreatedResponse(BaseModel):

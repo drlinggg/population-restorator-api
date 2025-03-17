@@ -41,11 +41,9 @@ class TerritoriesService:
             internal_territories_df,
             internal_houses_df,
             config.app.debug,
-            "population-restorator/output/balancer/territories.json",
-            "population-restorator/output/balancer/houses.json",
         )
 
-    async def divide(self, territory_id: int, prev_job: rq.job | None = None):
+    async def divide(self, territory_id: int, houses_df: pd.DataFrame | None = None):
         # todo desc
 
         socdemo_client = SocDemoClient()
@@ -54,7 +52,7 @@ class TerritoriesService:
 
         distribution = "todo"
 
-        if prev_job is None:
+        if houses_df is None:
             houses_df = (await self.balance(territory_id))[1]
 
             return prdivide(houses_df,
@@ -63,7 +61,7 @@ class TerritoriesService:
                             verbose=config.app.debug
                             )
 
-        return prdivide(*prev_job.result[1],
+        return prdivide(houses_df,
                         distribution=distribution,
                         year=None,
                         verbose=config.app.debug

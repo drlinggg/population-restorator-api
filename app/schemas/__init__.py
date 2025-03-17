@@ -8,7 +8,5 @@ from .territories import (
     DebugJobErrorResponse,
     JobCreatedResponse,
     JobResponse,
-    TerritoryBalanceResponse,
-    TerritoryDivideResponse,
-    TerritoryRestoreResponse,
+    TerritoryResponse,
 )
