@@ -4,14 +4,12 @@ import pandas as pd
 import structlog
 
 from app.http_clients.common import (
-    APIConnectionError,
-    APITimeoutError,
     BaseClient,
     ObjectNotFoundError,
     handle_exceptions,
     handle_request,
 )
-from app.utils import PopulationRestoratorApiConfig
+from app.utils import PopulationRestoratorApiConfig, ApiConfig
 
 
 config = PopulationRestoratorApiConfig.from_file_or_default(os.getenv("CONFIG_PATH"))
@@ -28,7 +26,7 @@ class UrbanClient(BaseClient):
             logger.warning("http/https schema is not set, defaulting to http")
             self.config.host = f"http://{self.config.host}"
 
-    def is_alive(self) -> bool:
+    async def is_alive(self) -> bool:
 
         url = f"{self.config.host}{self.config.bash_path}/health_check/ping"
 
@@ -36,6 +34,8 @@ class UrbanClient(BaseClient):
 
         if result:
             return True
+
+        return False
 
     def __str__(self):
         return "UrbanClient"
@@ -157,7 +157,7 @@ class UrbanClient(BaseClient):
         """
 
         # save all unique parent_ids in dataframe
-        parent_ids = {parent_id for parent_id in territories_df["parent_id"]}
+        parent_ids = set(territories_df["parent_id"])
 
         population_df = pd.DataFrame(columns=["territory_id", "population"])
         population_df.set_index("territory_id")

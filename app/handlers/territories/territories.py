@@ -2,6 +2,8 @@
 
 from datetime import datetime, timezone
 
+from typing import Optional
+
 from fastapi import HTTPException, Request, status
 
 from app.http_clients.common.exceptions import (
@@ -51,19 +53,30 @@ async def balance(request: Request, territory_id: int):
     return JobCreatedResponse(job_id=job.id, status="Queued")
 
 
-# @territories_router.post(
-#    "/territories/divide/{territory_id}",
-#    status_code=status.HTTP_201_CREATED,
-#    response_model=TerritoryDivideResponse,
-# )
-# async def divide(request: Request, territory_id: int):
-#    # todo desc
-#    territories_service: TerritoriesService = get_territories_service()
-#    await territories_service.divide(territory_id)
-#
-#    return TerritoryDivideResponse(performed_at=str(strftime("%d-%m-%Y %H:%M:%S", gmtime())), territory_id=territory_id)
-#
-#
+@territories_router.post(
+    "/territories/divide/{territory_id}",
+    status_code=status.HTTP_201_CREATED,
+    response_model=JobCreatedResponse,
+    responses={
+        500: {"model": DebugErrorResponse, "description": "Internal Server Error"},
+    },  # todo
+)
+async def divide(request: Request, territory_id: int, from_previous: Optional[str] = None):
+    # todo desc
+    territories_service: TerritoriesService = get_territories_service()
+
+    if from_previous is not None:
+        prev_job = request.app.state.config.redis_queue.fetch_job(from_previous)
+        job = request.app.state.queue.enqueue(territories_service.divide,
+                                          territory_id,
+                                          prev_job)
+
+    else:
+        job = request.app.state.queue.enqueue(territories_service.divide,
+                                          territory_id)
+
+    return JobCreatedResponse(job_id=job.id, status="Queued")
+
 # @territories_router.post(
 #    "/territories/restore/{territory_id}",
 #    status_code=status.HTTP_201_CREATED,
@@ -161,7 +174,7 @@ async def get_status(request: Request, job_id: str):
         raise HTTPException(404, detail="Job not found")
 
     if job.is_finished:
-        print(type(datetime.now(timezone.utc)))
+        print(job.latest_result().return_value[1])
         return JobResponse(
             job_id=job.id,
             status=job.get_status(),

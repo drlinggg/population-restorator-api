@@ -105,7 +105,7 @@ class ExceptionHandlerMiddleware(BaseHTTPMiddleware):
             if self._debug[0]:
                 return JSONResponse(
                     DebugErrorResponse(
-                        error=str(exc), error_type=str(type(exc)), path=request.url.path, trace=trace
+                        error=str(exc), error_type=str(type(exc)), path=request.url.path, trace=" ".join(trace)
                     ).dict(),
                     status_code=error_status,
                 )

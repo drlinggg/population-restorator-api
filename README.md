@@ -13,4 +13,3 @@ Then you can use poetry to run application
 ```
 poetry run launch_population-restorator-api
 ```
-
