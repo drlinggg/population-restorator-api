@@ -47,9 +47,9 @@ class ApiConfig:
 @dataclass
 class DBConfig:
     # todo desc
-    addr: str
+    host: str
     port: int
-    name: str
+    database: str
     user: str
     password: str
     pool_size: int
@@ -136,9 +136,7 @@ class PopulationRestoratorApiConfig:
         return cls(
             app=AppConfig(host="0.0.0.0", port=8000, debug=True, name="population-restorator-api"),
             redis_queue=RedisQueueConfig(host="localhost", port="6379", db=0, queue_name="default"),
-            db=DBConfig(
-                addr="localhost", port=5432, name="urban_db", user="postgres", password="postgres", pool_size=15
-            ),
+            db=DBConfig(host="localhost", port=5432, database="prtest", user="admin", password="admin", pool_size=15),
             logging=LoggingConfig(level="INFO"),
             urban_api=ApiConfig(
                 host="https://urban-api.idu.kanootoko.org", port=443, api_key="todo", base_path="/api/v1"

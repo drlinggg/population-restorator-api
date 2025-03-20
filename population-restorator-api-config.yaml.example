@@ -1,25 +1,25 @@
 app:
   host: "0.0.0.0"
   port: 8000
-  debug: 1 # or 0
+  debug: 1
   name: "population-restorator-api"
 db:
-  addr: "localhost"
+  host: "localhost"
   port: 5432
-  name: "TODO"
-  user: "TODO"
-  password: "todo"
+  database: "prtest"
+  user: "admin"
+  password: "admin"
   pool_size: 15
 logging:
   level: "INFO"
   files:
-    - filename: "logs/main.log" # not only the info but every type goes here
+    - filename: "logs/testinfo.log"
       level: "INFO"
-    - filename: "logs/errors.log" # here go only error messages
+    - filename: "logs/testerror.log"
       level: "ERROR"
 redis_queue:
   host: "localhost"
-  port: 6379 # default port and could be changed
+  port: 6379
   db: 0
   queue_name: "default"
 urban_api:
@@ -28,7 +28,7 @@ urban_api:
   api_key: null
   base_path: "/api/v1"
 socdemo_api:
-  host: "https://socdemo.lok-tech.com"
+  host: "http://10.32.1.108:8000"
   port: 443
   api_key: null
   base_path: ""

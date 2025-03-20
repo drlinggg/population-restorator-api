@@ -5,15 +5,16 @@ import structlog
 
 from app.http_clients.common import (
     BaseClient,
+    ObjectNotFoundError,
     handle_exceptions,
     handle_request,
-    ObjectNotFoundError,
 )
-from app.utils import PopulationRestoratorApiConfig, ApiConfig
+from app.utils import ApiConfig, PopulationRestoratorApiConfig
 
 
 config = PopulationRestoratorApiConfig.from_file_or_default(os.getenv("CONFIG_PATH"))
 logger = structlog.getLogger()
+
 
 class SocDemoClient(BaseClient):
 
@@ -41,10 +42,10 @@ class SocDemoClient(BaseClient):
     async def get_population_pyramid(self, territory_id: int) -> tuple[list[int], list[int], list[str]]:
         """
         Args: territory_id
-        Returns: 
+        Returns:
         """
 
-        indicator_id: str = "2" # for populaion
+        indicator_id: str = "2"  # for populaion
 
         # getting response
 
@@ -73,16 +74,16 @@ class SocDemoClient(BaseClient):
         women: list[int] = list()
         indexes: list[str] = list()
 
-        #keyerror territory_id 2, okay 1
-
+        # keyerror territory_id 2, okay 1 done??
         for item in latest_pyramid["data"]:
-            index_start, index_end, men_amount, women_amount = (item["age_start"],
-                                                                item["age_end"] if item["age_end"] is not None else 130,
-                                                                int(item["male"]) if item["male"] is not None else 0,
-                                                                int(item["female"]) if item["female"] is not None else 0)
+            index_start = item["age_start"]
+            # bad idea but we'll fix that
+            index_end = item["age_end"] if item["age_end"] is not None else 130
+            men_amount = int(item["male"]) if item["male"] is not None else 0
+            women_amount = int(item["female"]) if item["female"] is not None else 0
 
             men.append(men_amount)
             women.append(women_amount)
-            indexes.append(index_start if index_start == index_end else f'{index_start}-{index_end}')
+            indexes.append(index_start if index_start == index_end else f"{index_start}-{index_end}")
 
         return men, women, indexes

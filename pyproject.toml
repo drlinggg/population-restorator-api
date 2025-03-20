@@ -25,6 +25,8 @@ dependencies = [
     "redis (>=5.2.1,<6.0.0)",
     "rq (>=2.1.0,<3.0.0)",
     "population-restorator @ file:///home/banakh/work/population-restorator-api/population-restorator",
+    "asyncpg (>=0.30.0,<0.31.0)",
+    "multiprocess (>=0.70.17,<0.71.0)",
 ]
 
 [tool.poetry]

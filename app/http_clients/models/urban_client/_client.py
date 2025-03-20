@@ -9,7 +9,7 @@ from app.http_clients.common import (
     handle_exceptions,
     handle_request,
 )
-from app.utils import PopulationRestoratorApiConfig, ApiConfig
+from app.utils import ApiConfig, PopulationRestoratorApiConfig
 
 
 config = PopulationRestoratorApiConfig.from_file_or_default(os.getenv("CONFIG_PATH"))
@@ -171,9 +171,8 @@ class UrbanClient(BaseClient):
             population_df = pd.concat([population_df, temp_population_df])
 
         # merge dfs
-        territories_df = territories_df.merge(population_df, on="territory_id", how="left")
 
-        return territories_df
+        return pd.merge(territories_df, population_df, on="territory_id", how="left")
 
     async def get_houses_from_territories(self, territory_parent_id: int) -> pd.DataFrame:
         """

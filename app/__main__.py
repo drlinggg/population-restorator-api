@@ -4,7 +4,7 @@ import typing as tp
 
 import uvicorn
 
-from app.utils import ApiConfig, AppConfig, PopulationRestoratorApiConfig, RedisQueueConfig
+from app.utils import ApiConfig, AppConfig, DBConfig, PopulationRestoratorApiConfig, RedisQueueConfig
 
 
 def _run_uvicorn(configuration: dict[str, tp.Any]) -> tp.NoReturn:
@@ -26,7 +26,14 @@ def main():
             debug=config.app.debug,
             name=config.app.name,
         ),
-        db=config.db,  # wtf todo rewrite
+        db=DBConfig(
+            host=config.db.host,
+            port=config.db.port,
+            database=config.db.database,
+            user=config.db.user,
+            password=config.db.password,
+            pool_size=config.db.pool_size,
+        ),
         redis_queue=RedisQueueConfig(
             host=config.redis_queue.host,
             port=config.redis_queue.port,
