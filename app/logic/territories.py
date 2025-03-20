@@ -16,7 +16,7 @@ from app.http_clients import (
     SocDemoClient,
     UrbanClient,
 )
-from app.utils import PopulationRestoratorApiConfig
+from app.utils import DBConfig, PopulationRestoratorApiConfig
 
 
 config = PopulationRestoratorApiConfig.from_file_or_default(os.getenv("CONFIG_PATH"))
@@ -27,6 +27,16 @@ from sqlalchemy import text
 # add this to middleware and _postgres_conn
 class TerritoriesService:
     # todo desc
+
+    def __init__(self, dbconfig: DBConfig):
+        self.db_config = dbconfig
+
+    async def get_connect(self) -> None:
+        self.connection_manager = PostgresConnectionManager(self.db_config, structlog.get_logger())
+        await self.connection_manager.refresh()
+
+    async def shut_connect(self) -> None:
+        await self.connection_manager.shutdown()
 
     async def balance(self, territory_id: int) -> tuple[pd.DataFrame, pd.DataFrame]:
         # todo desc
@@ -41,17 +51,25 @@ class TerritoriesService:
             urban_client.get_population_from_territory(territory_id),
         )
 
-        internal_territories_df.to_csv("population-restorator/sample_data/balancer/territories.csv", index=False)
-        internal_houses_df.to_csv("population-restorator/sample_data/balancer/houses.csv", index=False)
+        # internal_territories_df.to_csv("population-restorator/sample_data/balancer/territories.csv", index=False)
+        # internal_houses_df.to_csv("population-restorator/sample_data/balancer/houses.csv", index=False)
 
-        # 545,555 error sys1 exit
-        return prbalance(
-            100000,
+        ans = prbalance(
+            population,
             internal_territories_df,
             internal_houses_df,
             config.app.debug,
         )
 
+        # 545,555 error sys1 exit
+        return prbalance(
+            population,
+            internal_territories_df,
+            internal_houses_df,
+            config.app.debug,
+        )
+
+    #
     async def divide(self, territory_id: int, houses_df: pd.DataFrame | None = None):
         # todo desc
 
@@ -66,25 +84,20 @@ class TerritoriesService:
         distribution = SocialGroupsDistribution(primary, list())
 
         result = list()
-
         if houses_df is None:
             houses_df = (await self.balance(territory_id))[1]
             result = prdivide(houses_df, distribution=distribution, year=None, verbose=config.app.debug)
-
         result = prdivide(houses_df, distribution=distribution, year=None, verbose=config.app.debug)
 
-        return result
-
-        connection = PostgresConnectionManager(config.db, structlog.get_logger())
-        await connection.refresh()
-
+        await self.get_connect()
         # something like that
-        # statement = "select * from test;"
-        # async with connection.get_connection() as conn:
-        #    print((await conn.execute(text(statement))).mappings().all())
-        # await conn.commit()
+        statement = "select * from test;"
+        async with self.connection_manager.get_connection() as conn:
+            print((await conn.execute(text(statement))).mappings().all())
+        await conn.commit()
+        await self.shut_connect()
 
-        await connection.shutdown()
+        return result
 
     async def restore(self, territory_id: int):
         # todo

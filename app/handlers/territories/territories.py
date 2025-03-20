@@ -44,9 +44,10 @@ FOREIGN_API_EXCEPTIONS = [
 async def balance(request: Request, territory_id: int):
     # todo desc
 
-    territories_service = TerritoriesService()
+    # todo add these to middlewares with config by default
+    territories_service = TerritoriesService(request.app.state.config.db)
 
-    job = request.app.state.queue.enqueue(territories_service.balance, territory_id)
+    job = request.app.state.queue.enqueue(territories_service.balance, args=(territory_id,), job_timeout=500)
     return JobCreatedResponse(job_id=job.id, status="Queued")
 
 
@@ -66,8 +67,8 @@ async def divide(
     from_previous: str = Query(None, description="id of balance job which calculations would be used"),
 ):
     # todo desc
-
-    territories_service = TerritoriesService()
+    # todo add these to middlewares with config by default
+    territories_service = TerritoriesService(request.app.state.config.db)
 
     prev_job = request.app.state.queue.fetch_job(from_previous) if from_previous else None
     if from_previous is None:
