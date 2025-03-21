@@ -1,3 +1,8 @@
+"""
+Base http_client, request sending method and http exceptions
+are defined here
+"""
+
 from .exceptions import (
     APIConnectionError,
     APIError,

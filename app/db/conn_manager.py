@@ -1,4 +1,6 @@
-"""Connection manager class and get_connection function are defined here."""
+"""
+Connection manager class and get_connection function are defined here.
+"""
 
 from __future__ import annotations
 

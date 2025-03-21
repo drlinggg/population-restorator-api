@@ -1,11 +1,10 @@
+"""API client base exceptions are defined here."""
+
 import asyncio
 from functools import wraps
 from typing import Callable
 
 from aiohttp import ClientConnectionError
-
-
-"""API client base exceptions are defined here."""
 
 
 class APIError(RuntimeError):

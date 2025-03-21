@@ -1,3 +1,5 @@
+"""Base API client is defined here"""
+
 from __future__ import annotations
 
 import abc

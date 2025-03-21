@@ -1,6 +1,5 @@
 """
-Balance, divide, restore
-responses are defined here
+Response models are defined here
 """
 
 from typing import Optional

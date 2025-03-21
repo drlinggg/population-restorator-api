@@ -1,3 +1,9 @@
+"""
+TerritoriesService is defined here
+it is used for getting necessary data by using http clients
+and perfom population-restorator library executing
+"""
+
 from __future__ import annotations
 
 import asyncio
@@ -5,6 +11,8 @@ import os
 
 import pandas as pd
 import structlog
+from sqlalchemy import text
+
 from population_restorator.models import SocialGroupsDistribution, SocialGroupWithProbability
 
 # torename
@@ -21,7 +29,6 @@ from app.utils import DBConfig, PopulationRestoratorApiConfig
 
 config = PopulationRestoratorApiConfig.from_file_or_default(os.getenv("CONFIG_PATH"))
 
-from sqlalchemy import text
 
 
 # add this to middleware and _postgres_conn
@@ -54,13 +61,6 @@ class TerritoriesService:
         # internal_territories_df.to_csv("population-restorator/sample_data/balancer/territories.csv", index=False)
         # internal_houses_df.to_csv("population-restorator/sample_data/balancer/houses.csv", index=False)
 
-        ans = prbalance(
-            population,
-            internal_territories_df,
-            internal_houses_df,
-            config.app.debug,
-        )
-
         # 545,555 error sys1 exit
         return prbalance(
             population,
@@ -81,13 +81,15 @@ class TerritoriesService:
         women = [x / sum(women) for x in women]
         primary = [SocialGroupWithProbability.from_values("people_pyramid", 1, men, women)]
 
-        distribution = SocialGroupsDistribution(primary, list())
+        distribution = SocialGroupsDistribution(primary, [])
 
         result = list()
         if houses_df is None:
             houses_df = (await self.balance(territory_id))[1]
             result = prdivide(houses_df, distribution=distribution, year=None, verbose=config.app.debug)
-        result = prdivide(houses_df, distribution=distribution, year=None, verbose=config.app.debug)
+
+        else:
+            result = prdivide(houses_df, distribution=distribution, year=None, verbose=config.app.debug)
 
         await self.get_connect()
         # something like that

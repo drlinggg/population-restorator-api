@@ -1,5 +1,5 @@
 """
-Api territory routers are defined here.
+FastApi territory routers are defined here.
 It is needed to import files which use these routers to initialize handlers.
 """
 

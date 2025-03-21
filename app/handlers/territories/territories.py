@@ -1,4 +1,6 @@
-"""FastApi territory related handlers are defined here"""
+"""
+FastApi territory & population related handlers are defined here
+"""
 
 from datetime import datetime, timezone
 
@@ -74,7 +76,7 @@ async def divide(
     if from_previous is None:
         job = request.app.state.queue.enqueue(territories_service.divide, territory_id)
     elif prev_job and prev_job.is_finished:
-        job = request.app.state.queue.enqueue(territories_service.divide, territory_id, prev_job.return_value())
+        job = request.app.state.queue.enqueue(territories_service.divide, territory_id, prev_job.return_value()[1])
     elif prev_job and not prev_job.is_finished:
         raise HTTPException(status_code=400, detail=f"Previous job {from_previous} is not finished yet.")
     else:

@@ -1,3 +1,7 @@
+"""
+SocDemoClient is defined here for taking territories population pyramids
+"""
+
 import os
 
 import pandas as pd
@@ -15,7 +19,6 @@ from app.utils import ApiConfig, PopulationRestoratorApiConfig
 config = PopulationRestoratorApiConfig.from_file_or_default(os.getenv("CONFIG_PATH"))
 logger = structlog.getLogger()
 
-
 class SocDemoClient(BaseClient):
 
     def __init__(self):
@@ -28,9 +31,7 @@ class SocDemoClient(BaseClient):
     async def is_alive(self) -> bool:
 
         url = f"{self.config.host}{self.config.bash_path}/health_check/ping"
-
         result = await handle_request(url)
-
         if result:
             return True
         return False
@@ -42,7 +43,8 @@ class SocDemoClient(BaseClient):
     async def get_population_pyramid(self, territory_id: int) -> tuple[list[int], list[int], list[str]]:
         """
         Args: territory_id
-        Returns:
+        Returns: tuple with men,women, indexes lists
+        where men[i] is amount of men who are indexes[i] years old 
         """
 
         indicator_id: str = "2"  # for populaion
@@ -74,7 +76,6 @@ class SocDemoClient(BaseClient):
         women: list[int] = list()
         indexes: list[str] = list()
 
-        # keyerror territory_id 2, okay 1 done??
         for item in latest_pyramid["data"]:
             index_start = item["age_start"]
             # bad idea but we'll fix that

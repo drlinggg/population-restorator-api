@@ -1,3 +1,10 @@
+"""
+This class is used for taking data from foreign api
+with information about population, houses & territories
+"""
+
+from __future__ import annotations
+
 import os
 
 import pandas as pd
@@ -221,6 +228,7 @@ class UrbanClient(BaseClient):
         formatted_houses_df.set_index("house_id", inplace=True)
 
         for i in internal_houses_df["features"]:
+
             living_area_modeled = i["properties"]["building"]["properties"]["living_area_modeled"]
             living_area_official = i["properties"]["building"]["properties"]["living_area_official"]
 
@@ -228,7 +236,8 @@ class UrbanClient(BaseClient):
                 # "name": i["properties"]["name"],
                 "house_id": i["properties"]["building"]["id"],
                 "territory_id": i["properties"]["territories"][0]["id"],
-                "living_area": living_area_modeled if living_area_modeled is not None else living_area_official,
+                # prefering living_area_modeled than living_are_official, if none of this available -> 0
+                "living_area": living_area_modeled if living_area_modeled is not None else (living_area_official or 0),
                 "geometry": i["geometry"],
             }
 

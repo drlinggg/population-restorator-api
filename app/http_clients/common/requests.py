@@ -1,3 +1,7 @@
+"""
+Sending request method is defined here
+"""
+
 from __future__ import annotations
 
 import aiohttp
