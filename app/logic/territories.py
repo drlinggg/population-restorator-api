@@ -53,9 +53,10 @@ class TerritoriesService:
         internal_territories_df = await urban_client.get_internal_territories(territory_id)
         internal_territories_df = await urban_client.bind_population_to_territories(internal_territories_df)
 
-        internal_houses_df, population = await asyncio.gather(
+        internal_houses_df, population, main_territory = await asyncio.gather(
             urban_client.get_houses_from_territories(territory_id),
             urban_client.get_population_from_territory(territory_id),
+            urban_client.get_territory(territory_id)
         )
 
         # internal_territories_df.to_csv("population-restorator/sample_data/balancer/territories.csv", index=False)
@@ -66,6 +67,7 @@ class TerritoriesService:
             population,
             internal_territories_df,
             internal_houses_df,
+            main_territory,
             config.app.debug,
         )
 

@@ -101,6 +101,57 @@ class UrbanClient(BaseClient):
         return formatted_territories_df
 
     @handle_exceptions
+    async def get_territory(self, territory_id: int) -> pd.DataFrame:
+        """
+        Args: territory_id
+        Returns: dataframe for with 1 element, this territory info
+
+        index=territory_id
+        territory_id (int): id of current territory
+        name (str): name of current territory
+        parent_id (int): territory on level above that has current territory as a child
+        geometry (geojson) : coords of current territory
+
+             territory_id                                name  parent_id  level                                           geometry
+          3             3     Самойловское сельское поселение          2      4  {'type': 'Polygon', 'coordinates': [[[34.42168...
+        ...          ...                                 ...        ...     ...                                                ...
+
+        """
+
+        # getting response
+        url = f"{self.config.host}{self.config.base_path}/territories/{territory_id}"
+
+        params = {
+            "territories_ids": territory_id,
+        }
+
+        headers = {
+            "accept": "application/json",
+        }
+
+        data = await handle_request(url, params, headers)
+
+        if data is None:
+            raise ObjectNotFoundError()
+        
+        data = data["features"][0]
+
+        # formatting
+        territory_df = pd.DataFrame(columns=["territory_id", "name", "parent_id", "level", "geometry"])
+        territory_df.set_index("territory_id")
+
+        territory_df.loc[territory_id] = {
+            "territory_id": territory_id,
+            "name": data["properties"]["name"],
+            "parent_id": data["properties"]["parent"]["id"],
+            "level": data["properties"]["level"],
+            "geometry": data["geometry"]
+        }
+
+        return territory_df
+
+
+    @handle_exceptions
     async def get_population_for_child_territories(self, parent_id: int) -> pd.DataFrame:
         """
         Args: parent_id
