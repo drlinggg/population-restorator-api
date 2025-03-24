@@ -87,7 +87,7 @@ class UrbanClient(BaseClient):
         # formatting
         columns = ["territory_id", "name", "parent_id", "level", "geometry"]
         formatted_territories_df = pd.DataFrame(columns=columns)
-        formatted_territories_df.set_index("territory_id")
+        formatted_territories_df.set_index("territory_id", inplace=True)
 
         for i in internal_territories_df["features"]:
             formatted_territories_df.loc[i["properties"]["territory_id"]] = {
@@ -276,7 +276,7 @@ class UrbanClient(BaseClient):
         # formatting
         columns = ["house_id", "territory_id", "living_area", "geometry"]
         formatted_houses_df = pd.DataFrame(columns=columns)
-        formatted_houses_df.set_index("house_id", inplace=True)
+        formatted_houses_df.reset_index().set_index("house_id", inplace=True)
 
         for i in internal_houses_df["features"]:
 

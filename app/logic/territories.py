@@ -59,10 +59,9 @@ class TerritoriesService:
             urban_client.get_territory(territory_id)
         )
 
-        # internal_territories_df.to_csv("population-restorator/sample_data/balancer/territories.csv", index=False)
-        # internal_houses_df.to_csv("population-restorator/sample_data/balancer/houses.csv", index=False)
+        #internal_territories_df.to_csv("population-restorator/sample_data/balancer/territories.csv")
+        #internal_houses_df.to_csv("population-restorator/sample_data/balancer/houses.csv")
 
-        # 545,555 error sys1 exit
         return prbalance(
             population,
             internal_territories_df,
@@ -85,21 +84,22 @@ class TerritoriesService:
 
         distribution = SocialGroupsDistribution(primary, [])
 
-        result = list()
+        result = []
         if houses_df is None:
             houses_df = (await self.balance(territory_id))[1]
             result = prdivide(houses_df, distribution=distribution, year=None, verbose=config.app.debug)
 
         else:
+            print(houses_df)
             result = prdivide(houses_df, distribution=distribution, year=None, verbose=config.app.debug)
 
-        await self.get_connect()
+        #await self.get_connect()
         # something like that
-        statement = "select * from test;"
-        async with self.connection_manager.get_connection() as conn:
-            print((await conn.execute(text(statement))).mappings().all())
-        await conn.commit()
-        await self.shut_connect()
+        #statement = "select * from divide;"
+        #async with self.connection_manager.get_connection() as conn:
+        #    print((await conn.execute(text(statement))).mappings().all())
+        #await conn.commit()
+        #await self.shut_connect()
 
         return result
 
