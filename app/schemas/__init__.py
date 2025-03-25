@@ -8,5 +8,6 @@ from .territories import (
     DebugJobErrorResponse,
     JobCreatedResponse,
     JobResponse,
+    SurvivabilityCoefficients,
     TerritoryResponse,
 )

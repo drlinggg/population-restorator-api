@@ -133,7 +133,7 @@ class UrbanClient(BaseClient):
 
         if data is None:
             raise ObjectNotFoundError()
-        
+
         data = data["features"][0]
 
         # formatting
@@ -145,11 +145,10 @@ class UrbanClient(BaseClient):
             "name": data["properties"]["name"],
             "parent_id": data["properties"]["parent"]["id"],
             "level": data["properties"]["level"],
-            "geometry": data["geometry"]
+            "geometry": data["geometry"],
         }
 
         return territory_df
-
 
     @handle_exceptions
     async def get_population_for_child_territories(self, parent_id: int) -> pd.DataFrame:

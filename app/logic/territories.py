@@ -8,16 +8,17 @@ from __future__ import annotations
 
 import asyncio
 import os
+from typing import Any
 
 import pandas as pd
 import structlog
-from sqlalchemy import text
-
-from population_restorator.models import SocialGroupsDistribution, SocialGroupWithProbability
+from population_restorator.models import SocialGroupsDistribution, SocialGroupWithProbability, SurvivabilityCoefficients
 
 # torename
 from population_restorator.scenarios import balance as prbalance
 from population_restorator.scenarios import divide as prdivide
+from population_restorator.scenarios import forecast as prforecast
+from sqlalchemy import text
 
 from app.db import PostgresConnectionManager
 from app.http_clients import (
@@ -28,7 +29,6 @@ from app.utils import DBConfig, PopulationRestoratorApiConfig
 
 
 config = PopulationRestoratorApiConfig.from_file_or_default(os.getenv("CONFIG_PATH"))
-
 
 
 # add this to middleware and _postgres_conn
@@ -56,11 +56,11 @@ class TerritoriesService:
         internal_houses_df, population, main_territory = await asyncio.gather(
             urban_client.get_houses_from_territories(territory_id),
             urban_client.get_population_from_territory(territory_id),
-            urban_client.get_territory(territory_id)
+            urban_client.get_territory(territory_id),
         )
 
-        #internal_territories_df.to_csv("population-restorator/sample_data/balancer/territories.csv")
-        #internal_houses_df.to_csv("population-restorator/sample_data/balancer/houses.csv")
+        # internal_territories_df.to_csv("population-restorator/sample_data/balancer/territories.csv")
+        # internal_houses_df.to_csv("population-restorator/sample_data/balancer/houses.csv")
 
         return prbalance(
             population,
@@ -71,8 +71,10 @@ class TerritoriesService:
         )
 
     #
-    async def divide(self, territory_id: int, houses_df: pd.DataFrame | None = None):
+    async def divide(self, territory_id: int, houses_df: pd.DataFrame | None = None) -> tuple[pd.DataFrame, ...]:
         # todo desc
+
+        # i dont realy like this part
 
         socdemo_client = SocDemoClient()
 
@@ -84,25 +86,51 @@ class TerritoriesService:
 
         distribution = SocialGroupsDistribution(primary, [])
 
-        result = []
         if houses_df is None:
             houses_df = (await self.balance(territory_id))[1]
-            result = prdivide(houses_df, distribution=distribution, year=None, verbose=config.app.debug)
 
-        else:
-            print(houses_df)
-            result = prdivide(houses_df, distribution=distribution, year=None, verbose=config.app.debug)
-
-        #await self.get_connect()
-        # something like that
-        #statement = "select * from divide;"
-        #async with self.connection_manager.get_connection() as conn:
-        #    print((await conn.execute(text(statement))).mappings().all())
-        #await conn.commit()
-        #await self.shut_connect()
+        result = prdivide(houses_df, distribution=distribution, year=None, verbose=config.app.debug)
 
         return result
 
-    async def restore(self, territory_id: int):
-        # todo
-        pass
+    async def restore(
+        self,
+        territory_id: int,
+        survivability_coefficients: dict[str, tuple[float]],
+        year_begin: int,
+        years: int,
+        boys_to_girls: float,
+        fertility_coefficient: float,
+        fertility_begin: int,
+        fertility_end: int,
+    ):
+        """Lasciate ogne speranza, voi ch’entrate"""
+
+        # example
+        coeffs = SurvivabilityCoefficients(
+            [1 / (i * 0.1) for i in range(1, 100)], [1 / (i * 0.1) for i in range(1, 100)]
+        )
+
+        divide_result = await self.divide(territory_id)
+
+        forecast_result = prforecast(
+            houses_db="/home/banakh/work/population-restorator-api/population-restorator/test.db",  # toberenamed
+            coeffs=coeffs,
+            year_begin=year_begin,
+            years=years,
+            boys_to_girls=boys_to_girls,
+            fertility_coefficient=fertility_coefficient,
+            fertility_begin=fertility_begin,
+            fertility_end=fertility_end,
+            verbose=config.app.debug,
+        )
+
+        # await self.get_connect()
+        # something like that
+        # statement = "select * from divide;"
+        # async with self.connection_manager.get_connection() as conn:
+        #    print((await conn.execute(text(statement))).mappings().all())
+        # await conn.commit()
+        # await self.shut_connect()
+
+        return forecast_result  # mb

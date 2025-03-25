@@ -19,6 +19,7 @@ from app.utils import ApiConfig, PopulationRestoratorApiConfig
 config = PopulationRestoratorApiConfig.from_file_or_default(os.getenv("CONFIG_PATH"))
 logger = structlog.getLogger()
 
+
 class SocDemoClient(BaseClient):
 
     def __init__(self):
@@ -44,7 +45,7 @@ class SocDemoClient(BaseClient):
         """
         Args: territory_id
         Returns: tuple with men,women, indexes lists
-        where men[i] is amount of men who are indexes[i] years old 
+        where men[i] is amount of men who are indexes[i] years old
         """
 
         indicator_id: str = "2"  # for populaion

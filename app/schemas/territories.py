@@ -38,3 +38,8 @@ class JobResponse(BaseModel):
 class JobCreatedResponse(BaseModel):
     job_id: str
     status: str
+
+
+class SurvivabilityCoefficients(BaseModel):
+    men: tuple
+    women: tuple

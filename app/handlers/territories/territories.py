@@ -19,6 +19,7 @@ from app.schemas import (
     DebugJobErrorResponse,
     JobCreatedResponse,
     JobResponse,
+    SurvivabilityCoefficients,
     TerritoryResponse,
 )
 from app.utils import JobError
@@ -85,19 +86,47 @@ async def divide(
     return JobCreatedResponse(job_id=job.id, status="Queued")
 
 
-# @territories_router.post(
-#    "/territories/restore/{territory_id}",
-#    status_code=status.HTTP_201_CREATED,
-#    response_model=TerritoryRestoreResponse,
-# )
-# async def restore(request: Request, territory_id: int):
-#    # todo desc
-#    territories_service: TerritoriesService = get_territories_service()
-#    await territories_service.restore(territory_id)
-#
-#    return TerritoryRestoreResponse(
-#        performed_at=str(strftime("%d-%m-%Y %H:%M:%S", gmtime())), territory_id=territory_id
-#    )
+@territories_router.post(
+    "/territories/restore/{territory_id}",
+    status_code=status.HTTP_201_CREATED,
+    response_model=JobCreatedResponse,
+    responses={
+        500: {"model": DebugErrorResponse, "description": "Internal Server Error"},
+        400: {"description": "Previous job {job_id} is not finished yet"},
+        404: {"description": "Previous job {job_id} not found"},
+    },  # todo
+)
+async def restore(
+    request: Request,
+    territory_id: int,
+    survivability_coefficients: SurvivabilityCoefficients,
+    year_begin: int = Query(...),  # todo сделать чтобы это использовалось и бралось красиво епты
+    years: int = Query(...),
+    boys_to_girls: float = Query(...),
+    fertility_coefficient: float = Query(...),
+    fertility_begin: int = Query(18, description="age of fertility begining"),
+    fertility_end: int = Query(38, description="age of fertility ending"),
+):
+    # todo desc
+    # todo add these to middlewares with config by default
+    territories_service = TerritoriesService(request.app.state.config.db)
+
+    print(survivability_coefficients)
+
+    restore_args = (
+        territory_id,
+        survivability_coefficients,
+        year_begin,
+        years,
+        boys_to_girls,
+        fertility_coefficient,
+        fertility_begin,
+        fertility_end,
+    )
+
+    job = request.app.state.queue.enqueue(territories_service.restore, args=restore_args)
+
+    return JobCreatedResponse(job_id=job.id, status="Queued")
 
 
 @territories_router.get(
@@ -182,7 +211,6 @@ async def get_status(request: Request, job_id: str):
         raise HTTPException(404, detail="Job not found")
 
     if job.is_finished:
-        print(job.latest_result().return_value)
         return JobResponse(
             job_id=job.id,
             status=job.get_status(),
