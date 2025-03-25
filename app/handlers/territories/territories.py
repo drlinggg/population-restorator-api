@@ -106,12 +106,11 @@ async def restore(
     fertility_coefficient: float = Query(...),
     fertility_begin: int = Query(18, description="age of fertility begining"),
     fertility_end: int = Query(38, description="age of fertility ending"),
+    from_scratch: bool = Query(True, description="recalculate previous steps before restoring")
 ):
     # todo desc
     # todo add these to middlewares with config by default
     territories_service = TerritoriesService(request.app.state.config.db)
-
-    print(survivability_coefficients)
 
     restore_args = (
         territory_id,
@@ -122,6 +121,7 @@ async def restore(
         fertility_coefficient,
         fertility_begin,
         fertility_end,
+        from_scratch,
     )
 
     job = request.app.state.queue.enqueue(territories_service.restore, args=restore_args)

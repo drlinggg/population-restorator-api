@@ -89,7 +89,9 @@ class TerritoriesService:
         if houses_df is None:
             houses_df = (await self.balance(territory_id))[1]
 
-        result = prdivide(houses_df, distribution=distribution, year=None, verbose=config.app.debug)
+        #houses_df.set_index("house_id", drop=False, inplace=True) #set nice index
+
+        result = prdivide(territory_id=territory_id, houses_df=houses_df, distribution=distribution, year=None, verbose=config.app.debug)
 
         return result
 
@@ -103,6 +105,7 @@ class TerritoriesService:
         fertility_coefficient: float,
         fertility_begin: int,
         fertility_end: int,
+        from_scratch: bool
     ):
         """Lasciate ogne speranza, voi ch’entrate"""
 
@@ -111,10 +114,12 @@ class TerritoriesService:
             [1 / (i * 0.1) for i in range(1, 100)], [1 / (i * 0.1) for i in range(1, 100)]
         )
 
-        divide_result = await self.divide(territory_id)
+        if from_scratch:
+            divide_result = await self.divide(territory_id)
 
         forecast_result = prforecast(
             houses_db="/home/banakh/work/population-restorator-api/population-restorator/test.db",  # toberenamed
+            territory_id=territory_id,
             coeffs=coeffs,
             year_begin=year_begin,
             years=years,
