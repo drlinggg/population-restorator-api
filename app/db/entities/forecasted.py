@@ -6,13 +6,13 @@ from app.db import metadata
 
 
 class ScenarioEnum(enum.Enum):
-    NEGATIVE = (1,)
-    NEUTRAL = (2,)
+    NEGATIVE = 1
+    NEUTRAL = 2
     POSITIVE = 3
 
 
 class SexEnum(enum.Enum):
-    MALE = (1,)
+    MALE = 1
     FEMALE = 2
 
 
@@ -36,5 +36,5 @@ Columns:
 - 'year' - year which used to be forecasted, Integer
 - 'sex' - MALE/FEMALE Enum
 - 'age' - age which used to be forecasted, SmallInteger
-- 'value' - amount of people in building at year who have such sex and age
+- 'value' - amount of people in building at this year who have such sex and age
 """

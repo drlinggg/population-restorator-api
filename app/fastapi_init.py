@@ -3,10 +3,8 @@ import os
 from contextlib import asynccontextmanager
 
 import multiprocess as mp
-import structlog
 from fastapi import FastAPI
 
-from app.db import PostgresConnectionManager
 from app.handlers.routers import routers_list
 from app.middlewares import (
     ExceptionHandlerMiddleware,
@@ -35,13 +33,19 @@ def get_app(prefix: str = "/api") -> FastAPI:
     app.state.config = app_config
 
     loggers_dict = {logger_config.filename: logger_config.level for logger_config in app_config.logging.files}
-    logger = configure_logging(app_config.logging.level, loggers_dict)
+    logger = configure_logging(
+        app_config.logging.level, 
+        loggers_dict
+    )
     app.state.logger = logger
 
     app.add_middleware(
         LoggingMiddleware,
     )
-    app.add_middleware(ExceptionHandlerMiddleware, debug=(app_config.app.debug,))
+    app.add_middleware(
+        ExceptionHandlerMiddleware,
+        debug=(app_config.app.debug,)
+    )
 
     return app
 
@@ -56,15 +60,15 @@ async def lifespan(app: FastAPI):
     # todo add manage amount of workers
     host, port, db, queue_name = dataclasses.astuple(app_config.redis_queue)
     app.state.redis, app.state.queue = start_redis_queue(host=host, port=port, db=db)
-    rq_worker_process = mp.Process(target=start_rq_worker, args=(host, port, db, queue_name))
-    rq_worker_process.start()
 
-    connection = PostgresConnectionManager(app.state.config.db, structlog.get_logger())
-    await connection.refresh()
+    rq_worker_process = mp.Process(
+        target=start_rq_worker,
+        args=(host, port, db, queue_name)
+    )
+    rq_worker_process.start()
 
     yield
 
-    await connection.shutdown()
     rq_worker_process.terminate()
 
 
