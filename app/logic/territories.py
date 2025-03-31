@@ -8,24 +8,29 @@ from __future__ import annotations
 
 import asyncio
 import os
-from typing import Any
 
 import pandas as pd
+import sqlalchemy
 import structlog
+from population_restorator.forecaster import export_year_age_values
 from population_restorator.models import SocialGroupsDistribution, SocialGroupWithProbability, SurvivabilityCoefficients
 
 # torename
 from population_restorator.scenarios import balance as prbalance
 from population_restorator.scenarios import divide as prdivide
 from population_restorator.scenarios import forecast as prforecast
-from sqlalchemy import text
 
-from app.db import PostgresConnectionManager
+from app.db import MetaData, PostgresConnectionManager
+from app.db.entities import ScenarioEnum, SexEnum, t_forecasted
 from app.http_clients import (
     SocDemoClient,
     UrbanClient,
 )
+from app.http_clients.common.exceptions import ObjectNotFoundError
 from app.utils import DBConfig, PopulationRestoratorApiConfig
+
+
+# from app.db import ...
 
 
 config = PopulationRestoratorApiConfig.from_file_or_default(os.getenv("CONFIG_PATH"))
@@ -89,11 +94,13 @@ class TerritoriesService:
         if houses_df is None:
             houses_df = (await self.balance(territory_id))[1]
 
-        #houses_df.set_index("house_id", drop=False, inplace=True) #set nice index
-
-        result = prdivide(territory_id=territory_id, houses_df=houses_df, distribution=distribution, year=None, verbose=config.app.debug)
-
-        return result
+        return prdivide(
+            territory_id=territory_id,
+            houses_df=houses_df,
+            distribution=distribution,
+            year=None,
+            verbose=config.app.debug,
+        )
 
     async def restore(
         self,
@@ -105,7 +112,7 @@ class TerritoriesService:
         fertility_coefficient: float,
         fertility_begin: int,
         fertility_end: int,
-        from_scratch: bool
+        from_scratch: bool,
     ):
         """Lasciate ogne speranza, voi ch’entrate"""
 
@@ -130,12 +137,51 @@ class TerritoriesService:
             verbose=config.app.debug,
         )
 
-        # await self.get_connect()
-        # something like that
-        # statement = "select * from divide;"
-        # async with self.connection_manager.get_connection() as conn:
-        #    print((await conn.execute(text(statement))).mappings().all())
-        # await conn.commit()
-        # await self.shut_connect()
+        output_dir = "/home/banakh/shitstorage"
+        db_paths = [f"{output_dir}/year_{year}.sqlite" for year in range(year_begin + 1, year_begin + years + 1)]
+        cur_year = year_begin + 1
 
-        return forecast_result  # mb
+        await self.get_connect()
+
+        logger = structlog.get_logger()
+        async with self.connection_manager.get_connection() as conn:
+
+            for db_path in db_paths:
+                year_data = export_year_age_values(db_path=db_path, territory_id=territory_id, verbose=config.app.debug)
+
+                logger.info(f"uploading {db_path} into forecasted table")
+                if year_data is None:
+                    logger.error(f"got no data from {db_path}")
+                    raise ObjectNotFoundError()
+
+                data_to_insert = []
+                for index, values in year_data.iterrows():
+                    data_to_insert.append(
+                        {
+                            "building_id": values["house_id"],
+                            "scenario": ScenarioEnum.NEUTRAL,
+                            "year": cur_year,
+                            "sex": SexEnum.MALE,
+                            "age": values["age"],
+                            "value": values["men"],
+                        }
+                    )
+                    data_to_insert.append(
+                        {
+                            "building_id": values["house_id"],
+                            "scenario": ScenarioEnum.NEUTRAL,
+                            "year": cur_year,
+                            "sex": SexEnum.FEMALE,
+                            "age": values["age"],
+                            "value": values["women"],
+                        }
+                    )
+
+                if data_to_insert:
+                    stmt = sqlalchemy.insert(t_forecasted)
+                    await conn.execute(stmt, data_to_insert)
+
+                cur_year += 1
+                await conn.commit()
+
+        await self.shut_connect()

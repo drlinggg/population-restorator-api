@@ -1,5 +1,10 @@
 """
-Connection manager class and get_connection function are defined here.
+Connection manager class and entities are defined here.
 """
 
+from sqlalchemy import MetaData
+
 from .conn_manager import PostgresConnectionManager
+
+
+metadata = MetaData()

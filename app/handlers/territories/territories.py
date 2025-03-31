@@ -106,7 +106,7 @@ async def restore(
     fertility_coefficient: float = Query(...),
     fertility_begin: int = Query(18, description="age of fertility begining"),
     fertility_end: int = Query(38, description="age of fertility ending"),
-    from_scratch: bool = Query(True, description="recalculate previous steps before restoring")
+    from_scratch: bool = Query(True, description="recalculate previous steps before restoring"),
 ):
     # todo desc
     # todo add these to middlewares with config by default
