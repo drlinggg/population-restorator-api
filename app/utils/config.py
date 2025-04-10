@@ -26,6 +26,12 @@ class AppConfig:
 
 
 @dataclass
+class WorkingDirConfig:
+    divide_working_db_path: str
+    forecast_working_dir_path: str
+
+
+@dataclass
 class RedisQueueConfig:
     # todo desc
     host: str
@@ -75,8 +81,8 @@ class LoggingConfig:
 @dataclass
 class PopulationRestoratorApiConfig:
     app: AppConfig
+    working_dir: WorkingDirConfig
     redis_queue: RedisQueueConfig
-    db: DBConfig
     logging: LoggingConfig
     urban_api: ApiConfig
     socdemo_api: ApiConfig
@@ -98,8 +104,8 @@ class PopulationRestoratorApiConfig:
         return OrderedDict(
             [
                 ("app", to_ordered_dict_recursive(self.app)),
+                ("working_dir", to_ordered_dict_recursive(self.working_dir)),
                 ("redis_queue", to_ordered_dict_recursive(self.redis_queue)),
-                ("db", to_ordered_dict_recursive(self.db)),
                 ("logging", to_ordered_dict_recursive(self.logging)),
                 ("urban_api", to_ordered_dict_recursive(self.urban_api)),
                 ("socdemo_api", to_ordered_dict_recursive(self.socdemo_api)),
@@ -135,8 +141,11 @@ class PopulationRestoratorApiConfig:
 
         return cls(
             app=AppConfig(host="0.0.0.0", port=8000, debug=True, name="population-restorator-api"),
+            working_dir=WorkingDirConfig(
+                divide_working_db_path="/home/banakh/work/population-restorator-api/population-restorator/test.db",
+                forecast_working_dir_path="/home/banakh/calculation_dbs/"
+            ),
             redis_queue=RedisQueueConfig(host="localhost", port="6379", db=0, queue_name="default"),
-            db=DBConfig(host="localhost", port=5432, database="prtest", user="admin", password="admin", pool_size=15),
             logging=LoggingConfig(level="INFO"),
             urban_api=ApiConfig(
                 host="https://urban-api.idu.kanootoko.org", port=443, api_key="todo", base_path="/api/v1"
@@ -157,8 +166,8 @@ class PopulationRestoratorApiConfig:
 
             return cls(
                 app=AppConfig(**data.get("app", {})),
+                working_dir=WorkingDirConfig(**data.get("working_dirs", {})),
                 redis_queue=RedisQueueConfig(**data.get("redis_queue", {})),
-                db=DBConfig(**data.get("db", {})),
                 logging=LoggingConfig(**data.get("logging", {})),
                 urban_api=ApiConfig(**data.get("urban_api", {})),
                 socdemo_api=ApiConfig(**data.get("socdemo_api", {})),
@@ -174,13 +183,3 @@ class PopulationRestoratorApiConfig:
             return cls.example()
 
         return cls.load(config_path)
-
-    def update(self, other: "PopulationRestoratorApiConfig") -> None:
-        """Update current config attributes with the values from another UrbanAPIConfig instance."""
-        for section in ("app", "db", "fileserver", "logging"):
-            current_subconfig = getattr(self, section)
-            other_subconfig = getattr(other, section)
-
-            for param, value in other_subconfig.__dict__.items():
-                if param in current_subconfig.__dict__:
-                    setattr(current_subconfig, param, value)

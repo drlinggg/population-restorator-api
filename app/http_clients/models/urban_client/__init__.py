@@ -2,4 +2,4 @@
 UrbanClient is defined here
 """
 
-from ._client import UrbanClient
+from .client import UrbanClient

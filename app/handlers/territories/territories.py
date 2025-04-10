@@ -48,7 +48,7 @@ async def balance(request: Request, territory_id: int):
     # todo desc
 
     # todo add these to middlewares with config by default
-    territories_service = TerritoriesService(request.app.state.config.db)
+    territories_service = TerritoriesService()
 
     job = request.app.state.queue.enqueue(territories_service.balance, args=(territory_id,), job_timeout=500)
     return JobCreatedResponse(job_id=job.id, status="Queued")
@@ -71,7 +71,7 @@ async def divide(
 ):
     # todo desc
     # todo add these to middlewares with config by default
-    territories_service = TerritoriesService(request.app.state.config.db)
+    territories_service = TerritoriesService()
 
     prev_job = request.app.state.queue.fetch_job(from_previous) if from_previous else None
     if from_previous is None:
@@ -101,7 +101,7 @@ async def restore(
     territory_id: int,
     survivability_coefficients: SurvivabilityCoefficients,
     year_begin: int = Query(...),  # todo сделать чтобы это использовалось и бралось красиво епты
-    years: int = Query(...),
+    year_end: int = Query(...),
     boys_to_girls: float = Query(...),
     fertility_coefficient: float = Query(...),
     fertility_begin: int = Query(18, description="age of fertility begining"),
@@ -109,14 +109,13 @@ async def restore(
     from_scratch: bool = Query(True, description="recalculate previous steps before restoring"),
 ):
     # todo desc
-    # todo add these to middlewares with config by default
-    territories_service = TerritoriesService(request.app.state.config.db)
+    territories_service = TerritoriesService()
 
     restore_args = (
         territory_id,
         survivability_coefficients,
         year_begin,
-        years,
+        year_end-year_begin,
         boys_to_girls,
         fertility_coefficient,
         fertility_begin,

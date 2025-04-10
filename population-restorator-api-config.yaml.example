@@ -3,13 +3,9 @@ app:
   port: 8000
   debug: 1
   name: "population-restorator-api"
-db:
-  host: "localhost"
-  port: 5432
-  database: "prtest"
-  user: "admin"
-  password: "admin"
-  pool_size: 15
+working_dirs:
+  divide_working_db_path: "/home/banakh/work/population-restorator-api/population-restorator/test.db"
+  forecast_working_dir_path: "/home/banakh/calculation_dbs/"
 logging:
   level: "INFO"
   files:

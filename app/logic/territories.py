@@ -10,7 +10,6 @@ import asyncio
 import os
 
 import pandas as pd
-import sqlalchemy
 import structlog
 import typing as tp
 from population_restorator.forecaster import export_year_age_values
@@ -21,38 +20,24 @@ from population_restorator.scenarios import balance as prbalance
 from population_restorator.scenarios import divide as prdivide
 from population_restorator.scenarios import forecast as prforecast
 
-from app.db import MetaData, PostgresConnectionManager
-from app.db.entities import ScenarioEnum, SexEnum, t_forecasted
 from app.http_clients import (
     SocDemoClient,
     UrbanClient,
 )
 from app.http_clients.common.exceptions import ObjectNotFoundError
-from app.utils import DBConfig, PopulationRestoratorApiConfig
+from app.utils import PopulationRestoratorApiConfig
 
 
 config = PopulationRestoratorApiConfig.from_file_or_default(os.getenv("CONFIG_PATH"))
 
 
-# add this to middleware and _postgres_conn
+# add this to middleware
 class TerritoriesService:
     """
     This class implements interaction between UrbanClient, SocDemoClient
     with population_restorator library 
     and saves forecasting data into postgresql database
     """
-
-    def __init__(self, dbconfig: DBConfig):
-        self.db_config = dbconfig
-        self.connection_manager: PostgresConnectionManager | None = None
-
-    async def get_connect(self) -> None:
-        self.connection_manager = PostgresConnectionManager(self.db_config, structlog.get_logger())
-        await self.connection_manager.refresh()
-
-    async def shut_connect(self) -> None:
-        if self.connection_manager is not None:
-            await self.connection_manager.shutdown()
 
     async def balance(self, territory_id: int) -> tuple[pd.DataFrame, pd.DataFrame]:
         """
@@ -74,9 +59,9 @@ class TerritoriesService:
         urban_client = UrbanClient()
 
         internal_territories_df = await urban_client.get_internal_territories(territory_id)
-        internal_territories_df = await urban_client.bind_population_to_territories(internal_territories_df)
 
-        internal_houses_df, population, main_territory = await asyncio.gather(
+        internal_territories_df, internal_houses_df, population, main_territory = await asyncio.gather(
+            urban_client.bind_population_to_territories(internal_territories_df),
             urban_client.get_houses_from_territories(territory_id),
             urban_client.get_population_from_territory(territory_id),
             urban_client.get_territory(territory_id),
@@ -116,11 +101,26 @@ class TerritoriesService:
 
         men, women, indexes = await socdemo_client.get_population_pyramid(territory_id)
 
-        men = [x / sum(men) for x in men]
-        women = [x / sum(women) for x in women]
+        men_prob = [x / sum(men) for x in men]
+        women_prob = [x / sum(women) for x in women]
 
-        # todo add working indexes and solve 70-75 problem
-        primary = [SocialGroupWithProbability.from_values("people_pyramid", 1, men, women)]
+        # todo add working indexes and solve 70-74 problem
+        """
+		[70-74] = 530 not single year population info
+		
+		70 71 72 73 74
+	    0.65x  0.6x 0.5x  0.4x  0.3x
+        get survivability_coefficients
+		
+		
+		2.35x = 530
+		x = 225
+		70   71  72 73 74
+		146 135 112 90 67 = 530
+        evaluate
+        the problem is that you dont have surv_coeff in divide
+        """
+        primary = [SocialGroupWithProbability.from_values("people_pyramid", 1, men_prob, women_prob)]
         distribution = SocialGroupsDistribution(primary, [])
 
         if houses_df is None:
@@ -132,75 +132,8 @@ class TerritoriesService:
             distribution=distribution,
             year=None,
             verbose=config.app.debug,
+            working_db_path=config.working_dir.divide_working_db_path
         )
-
-    async def insert_forecasted_data(
-        self,
-        input_dir: str,
-        territory_id: int,
-        year_begin: int,
-        years: int
-    ) -> tp.NoReturn:
-        """
-        This method extracts from forecast output dbs and inserts it in postgres database
-        Args:
-            input_dir: str, path for directory which contains databases per year
-            territory_id: int, id of the main territory which was been
-                          divided before and which data is going to be saved
-            year_begin: int, first year to be saved
-            years: int, for how many years saving is going to be
-        """
-        db_paths = [f"{input_dir}/year_{year}.sqlite" for year in range(year_begin + 1, year_begin + years + 1)]
-        cur_year = year_begin + 1
-
-        logger = structlog.get_logger()
-
-        await self.get_connect()
-        async with self.connection_manager.get_connection() as conn:
-
-            for db_path in db_paths:
-                year_data = export_year_age_values(
-                    db_path=db_path,
-                    territory_id=territory_id,
-                    verbose=config.app.debug
-                )
-
-                logger.info(f"uploading {db_path} into forecasted table")
-                if year_data is None:
-                    logger.error(f"got no data from {db_path}")
-                    raise ObjectNotFoundError()
-
-                data_to_insert = []
-                for index, values in year_data.iterrows():
-                    data_to_insert.append(
-                        {
-                            "building_id": values["house_id"],
-                            "scenario": ScenarioEnum.NEUTRAL,
-                            "year": cur_year,
-                            "sex": SexEnum.MALE,
-                            "age": values["age"],
-                            "value": values["men"],
-                        }
-                    )
-                    data_to_insert.append(
-                        {
-                            "building_id": values["house_id"],
-                            "scenario": ScenarioEnum.NEUTRAL,
-                            "year": cur_year,
-                            "sex": SexEnum.FEMALE,
-                            "age": values["age"],
-                            "value": values["women"],
-                        }
-                    )
-
-                if data_to_insert:
-                    stmt = sqlalchemy.insert(t_forecasted)
-                    await conn.execute(stmt, data_to_insert)
-
-                cur_year += 1
-                await conn.commit()
-
-        await self.shut_connect()
 
     async def restore(
         self,
@@ -216,6 +149,7 @@ class TerritoriesService:
     ) -> tp.NoReturn:
         """
         Lasciate ogne speranza, voi ch’entrate
+
         This method is used for forecasting N years population for given territory
         Args:
             territory_id: int, id of the territory which is going to be forecasted
@@ -241,7 +175,7 @@ class TerritoriesService:
             await self.divide(territory_id)
 
         prforecast(
-            houses_db="/home/banakh/work/population-restorator-api/population-restorator/test.db",  # toberenamed
+            houses_db=config.working_dir.divide_working_db_path,  # toberenamed
             territory_id=territory_id,
             coeffs=coeffs,  # should be replaced to survivability_coefficients
             year_begin=year_begin,
@@ -251,13 +185,7 @@ class TerritoriesService:
             fertility_begin=fertility_begin,
             fertility_end=fertility_end,
             verbose=config.app.debug,
+            working_dir=config.working_dir.forecast_working_dir_path
         )
 
-        forecast_output_dir = "/home/banakh/shitstorage"
-
-        await self.insert_forecasted_data(
-            input_dir=forecast_output_dir,
-            territory_id=territory_id,
-            year_begin=year_begin,
-            years=years
-        )
+        # save here

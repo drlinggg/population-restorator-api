@@ -2,8 +2,8 @@
 
 from .config import (
     ApiConfig,
+    WorkingDirConfig,
     AppConfig,
-    DBConfig,
     FileLogger,
     LoggingConfig,
     PopulationRestoratorApiConfig,
