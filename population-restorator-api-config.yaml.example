@@ -1,0 +1,30 @@
+app:
+  host: "0.0.0.0"
+  port: 8000
+  debug: 1
+  name: "population-restorator-api"
+working_dirs:
+  divide_working_db_path: "/home/banakh/work/population-restorator-api/population-restorator/test.db"
+  forecast_working_dir_path: "/home/banakh/calculation_dbs/"
+logging:
+  level: "INFO"
+  files:
+    - filename: "logs/testinfo.log"
+      level: "INFO"
+    - filename: "logs/testerror.log"
+      level: "ERROR"
+redis_queue:
+  host: "localhost"
+  port: 6379
+  db: 0
+  queue_name: "default"
+urban_api:
+  host: "https://urban-api.idu.kanootoko.org"
+  port: 443
+  api_key: null
+  base_path: "/api/v1"
+socdemo_api:
+  host: "http://10.32.1.108:8000"
+  port: 443
+  api_key: null
+  base_path: ""
