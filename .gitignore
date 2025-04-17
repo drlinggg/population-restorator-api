@@ -1,2 +1,9 @@
-.env
+*.env
+*.venv
 __pycache__/
+myenv/
+output/
+*.conf
+*.log
+*.yaml
+*.rdb
