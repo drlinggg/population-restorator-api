@@ -5,7 +5,7 @@ import typing as tp
 import uvicorn
 
 from app.utils import (
-    PopulationRestoratorApiConfig, 
+    PopulationRestoratorApiConfig,
 )
 
 

@@ -40,15 +40,15 @@ class JobCreatedResponse(BaseModel):
 
 
 class GatewayErrorResponse(BaseModel):
-    detail: str
+    detail: str = "did not get a response from the upstream server in order to complete the request"
 
 
 class TimeoutErrorResponse(BaseModel):
-    detail: str
+    detail: str = "did not get a response in time from the upstream server in order to complete the request"
 
 
 class JobNotFoundErrorResponse(BaseModel):
-    detail: str
+    detail: str = "job not found"
 
 
 class SurvivabilityCoefficients(BaseModel):

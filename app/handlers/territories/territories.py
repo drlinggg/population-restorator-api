@@ -3,10 +3,10 @@ FastApi territory & population related handlers are defined here
 """
 
 from datetime import datetime, timezone
+from typing import Union
 
 from fastapi import HTTPException, Query, Request, status
-
-from typing import Union
+from fastapi.responses import JSONResponse
 
 from app.http_clients.common.exceptions import (
     APIConnectionError,
@@ -15,16 +15,15 @@ from app.http_clients.common.exceptions import (
     InvalidStatusCode,
     ObjectNotFoundError,
 )
-from app.logic import TerritoriesService
 from app.schemas import (
     ErrorResponse,
-    JobErrorResponse,
+    GatewayErrorResponse,
     JobCreatedResponse,
+    JobErrorResponse,
+    JobNotFoundErrorResponse,
     JobResponse,
     SurvivabilityCoefficients,
     TerritoryResponse,
-    GatewayErrorResponse,
-    JobNotFoundErrorResponse,
     TimeoutErrorResponse,
 )
 from app.utils import JobError
@@ -53,7 +52,7 @@ async def balance(request: Request, territory_id: int):
     # todo desc
 
     # todo add these to middlewares with config by default
-    territories_service = TerritoriesService()
+    territories_service = request.app.state.territories_service
 
     job = request.app.state.queue.enqueue(territories_service.balance, args=(territory_id,), job_timeout=500)
     return JobCreatedResponse(job_id=job.id, status="Queued")
@@ -76,7 +75,7 @@ async def divide(
 ):
     # todo desc
     # todo add these to middlewares with config by default
-    territories_service = TerritoriesService()
+    territories_service = request.app.state.territories_service
 
     prev_job = request.app.state.queue.fetch_job(from_previous) if from_previous else None
     if from_previous is None:
@@ -86,7 +85,9 @@ async def divide(
     elif prev_job and not prev_job.is_finished:
         raise HTTPException(status_code=424, detail=f"Previous job {from_previous} is not finished yet.")
     else:
-        raise HTTPException(status_code=404, detail=f"Previous job {from_previous} not found.")
+        return JSONResponse(
+            JobNotFoundErrorResponse(detail="previous job {from_previous} not found").dict(), status_code=404
+        )
 
     return JobCreatedResponse(job_id=job.id, status="Queued")
 
@@ -97,8 +98,6 @@ async def divide(
     response_model=JobCreatedResponse,
     responses={
         500: {"model": ErrorResponse, "description": "Internal Server Error"},
-        424: {"description": "Previous job is not finished yet"},
-        404: {"model": JobNotFoundErrorResponse, "description": "Previous job not found"},
     },  # todo
 )
 async def restore(
@@ -114,21 +113,21 @@ async def restore(
     from_scratch: bool = Query(True, description="recalculate previous steps before restoring"),
 ):
     # todo desc
-    territories_service = TerritoriesService()
+    territories_service = request.app.state.territories_service
 
-    restore_args = (
-        territory_id,
-        survivability_coefficients,
-        year_begin,
-        year_end-year_begin,
-        boys_to_girls,
-        fertility_coefficient,
-        fertility_begin,
-        fertility_end,
-        from_scratch,
-    )
+    restore_args = {
+        "territory_id": territory_id,
+        "survivability_coefficients": survivability_coefficients,
+        "year_begin": year_begin,
+        "years": year_end - year_begin,
+        "boys_to_girls": boys_to_girls,
+        "fertility_coefficient": fertility_coefficient,
+        "fertility_begin": fertility_begin,
+        "fertility_end": fertility_end,
+        "from_scratch": from_scratch,
+    }
 
-    job = request.app.state.queue.enqueue(territories_service.restore, args=restore_args)
+    job = request.app.state.queue.enqueue(territories_service.restore, kwargs=restore_args)
 
     return JobCreatedResponse(job_id=job.id, status="Queued")
 
@@ -138,29 +137,17 @@ async def restore(
     status_code=status.HTTP_200_OK,
     response_model=JobResponse,
     responses={
-        404: {
-            "description": "Job not found",
-            "model": JobNotFoundErrorResponse
-        },
-        500: {
-            "description": "Internal Server Error",
-            "model": ErrorResponse
-        },
-        502: {
-            "description": "Bad Gateway",
-            "model": Union[JobErrorResponse, GatewayErrorResponse]
-        },
-        504: {
-            "description": "Didn't receive a timely response from upstream server",
-            "model": TimeoutErrorResponse
-        },
+        404: {"description": "Job not found", "model": JobNotFoundErrorResponse},
+        500: {"description": "Internal Server Error", "model": ErrorResponse},
+        502: {"description": "Bad Gateway", "model": Union[JobErrorResponse, GatewayErrorResponse]},
+        504: {"description": "Didn't receive a timely response from upstream server", "model": TimeoutErrorResponse},
     },
 )
 async def get_status(request: Request, job_id: str):
     job = request.app.state.queue.fetch_job(job_id)
 
     if job is None:
-        return JobNotFoundErrorResponse(detail=job_id)
+        return JSONResponse(content=JobNotFoundErrorResponse(detail="No job with such id").dict(), status_code=404)
 
     if job.is_finished:
         return JobResponse(

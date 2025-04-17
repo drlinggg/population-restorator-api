@@ -7,11 +7,9 @@ and perfom population-restorator library executing
 from __future__ import annotations
 
 import asyncio
-import os
+import typing as tp
 
 import pandas as pd
-import structlog
-import typing as tp
 from population_restorator.forecaster import export_year_age_values
 from population_restorator.models import SocialGroupsDistribution, SocialGroupWithProbability, SurvivabilityCoefficients
 
@@ -24,20 +22,30 @@ from app.http_clients import (
     SocDemoClient,
     UrbanClient,
 )
-from app.http_clients.common.exceptions import ObjectNotFoundError
-from app.utils import PopulationRestoratorApiConfig
-
-
-config = PopulationRestoratorApiConfig.from_file_or_default(os.getenv("CONFIG_PATH"))
 
 
 # add this to middleware
 class TerritoriesService:
     """
     This class implements interaction between UrbanClient, SocDemoClient
-    with population_restorator library 
+    with population_restorator library
     and saves forecasting data into postgresql database
     """
+
+    def __init__(
+        self,
+        urban_client: UrbanClient,
+        socdemo_client: SocDemoClient,
+        debug: bool,
+        forecast_working_dir_path: str,
+        divide_working_db_path: str,
+    ):
+
+        self.urban_client = urban_client
+        self.socdemo_client = socdemo_client
+        self.debug = debug
+        self.forecast_working_dir_path = forecast_working_dir_path
+        self.divide_working_db_path = divide_working_db_path
 
     async def balance(self, territory_id: int) -> tuple[pd.DataFrame, pd.DataFrame]:
         """
@@ -56,15 +64,13 @@ class TerritoriesService:
                 ...
         """
 
-        urban_client = UrbanClient()
-
-        internal_territories_df = await urban_client.get_internal_territories(territory_id)
+        internal_territories_df = await self.urban_client.get_internal_territories(territory_id)
 
         internal_territories_df, internal_houses_df, population, main_territory = await asyncio.gather(
-            urban_client.bind_population_to_territories(internal_territories_df),
-            urban_client.get_houses_from_territories(territory_id),
-            urban_client.get_population_from_territory(territory_id),
-            urban_client.get_territory(territory_id),
+            self.urban_client.bind_population_to_territories(internal_territories_df),
+            self.urban_client.get_houses_from_territories(territory_id),
+            self.urban_client.get_population_from_territory(territory_id),
+            self.urban_client.get_territory(territory_id),
         )
 
         # internal_territories_df.to_csv("population-restorator/sample_data/balancer/territories.csv")
@@ -75,13 +81,13 @@ class TerritoriesService:
             internal_territories_df,
             internal_houses_df,
             main_territory,
-            config.app.debug,
+            self.debug,
         )
 
     async def divide(self, territory_id: int, houses_df: pd.DataFrame | None = None) -> tuple[pd.DataFrame, pd.Series]:
         """
         This method uses balanced houses dataframe
-        and runs population_restorator divide method 
+        and runs population_restorator divide method
         which saves results into sqlite db
 
         Args:
@@ -97,9 +103,7 @@ class TerritoriesService:
             distribution: pd.Series, todo
         """
 
-        socdemo_client = SocDemoClient()
-
-        men, women, indexes = await socdemo_client.get_population_pyramid(territory_id)
+        men, women, indexes = await self.socdemo_client.get_population_pyramid(territory_id)
 
         men_prob = [x / sum(men) for x in men]
         women_prob = [x / sum(women) for x in women]
@@ -131,8 +135,8 @@ class TerritoriesService:
             houses_df=houses_df,
             distribution=distribution,
             year=None,
-            verbose=config.app.debug,
-            working_db_path=config.working_dir.divide_working_db_path
+            verbose=self.debug,
+            working_db_path=self.divide_working_db_path,
         )
 
     async def restore(
@@ -165,7 +169,6 @@ class TerritoriesService:
             from_scratch: bool, if true dividing first, otherwise using dividing data from divide output db
         """
 
-
         # example
         coeffs = SurvivabilityCoefficients(
             [1 / (i * 0.1) for i in range(1, 100)], [1 / (i * 0.1) for i in range(1, 100)]
@@ -175,7 +178,7 @@ class TerritoriesService:
             await self.divide(territory_id)
 
         prforecast(
-            houses_db=config.working_dir.divide_working_db_path,  # toberenamed
+            houses_db=self.divide_working_db_path,  # toberenamed
             territory_id=territory_id,
             coeffs=coeffs,  # should be replaced to survivability_coefficients
             year_begin=year_begin,
@@ -184,8 +187,8 @@ class TerritoriesService:
             fertility_coefficient=fertility_coefficient,
             fertility_begin=fertility_begin,
             fertility_end=fertility_end,
-            verbose=config.app.debug,
-            working_dir=config.working_dir.forecast_working_dir_path
+            verbose=self.debug,
+            working_dir=self.forecast_working_dir_path,
         )
 
         # save here

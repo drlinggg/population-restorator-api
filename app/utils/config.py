@@ -6,7 +6,7 @@ import os
 from collections import OrderedDict
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TextIO
+from typing import Any, TextIO
 
 import yaml
 
@@ -22,7 +22,7 @@ class AppConfig:
     name: str
 
     def __post_init__(self):
-        self.name = f"population-restorator-api (//todo apiversion//)"
+        self.name = f"population-restorator-api 0.0.1"
 
 
 @dataclass
@@ -43,9 +43,11 @@ class RedisQueueConfig:
 @dataclass
 class ApiConfig:
     """defaut api config"""
+
     host: str
     port: int
     api_key: str
+    const_request_params: dict[str, Any]
 
 
 @dataclass
@@ -141,14 +143,19 @@ class PopulationRestoratorApiConfig:
             app=AppConfig(host="0.0.0.0", port=8000, debug=True, name="population-restorator-api"),
             working_dir=WorkingDirConfig(
                 divide_working_db_path="/home/banakh/work/population-restorator-api/population-restorator/test.db",
-                forecast_working_dir_path="/home/banakh/calculation_dbs/"
+                forecast_working_dir_path="/home/banakh/calculation_dbs/",
             ),
             redis_queue=RedisQueueConfig(host="localhost", port="6379", db=0, queue_name="default"),
             logging=LoggingConfig(level="INFO"),
             urban_api=ApiConfig(
-                host="https://urban-api.idu.kanootoko.org", port=443, api_key="todo",
+                host="https://urban-api.idu.kanootoko.org",
+                port=443,
+                api_key="todo",
+                const_request_params={"some_path_param": 4},
             ),
-            socdemo_api=ApiConfig(host="todo", port=443, api_key="todo"),
+            socdemo_api=ApiConfig(
+                host="todo", port=443, api_key="todo", const_request_params={"another_param": "test"}
+            ),
         )
 
     @classmethod

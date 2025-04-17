@@ -10,16 +10,9 @@ from app.utils import ApiConfig
 class BaseClient(abc.ABC):
     """Base API client"""
 
-    def __init__(self):
-        self.config: ApiConfig | None = None
+    def __init__(self, api_config: ApiConfig):
+        self.config: ApiConfig = api_config
 
     @abc.abstractmethod
-    async def is_alive(self) -> bool:
-        """Check if urban_api instance is alive."""
-
-    async def get_version(self) -> str | None:
-        """Get API version if appliable."""
-        return None
-
     def __str__(self):
-        pass
+        """"""

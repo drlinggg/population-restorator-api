@@ -15,8 +15,8 @@ from app.http_clients.common import (
 )
 from app.schemas import (
     ErrorResponse,
-    JobErrorResponse,
     GatewayErrorResponse,
+    JobErrorResponse,
     TimeoutErrorResponse,
 )
 from app.utils import JobError
@@ -29,7 +29,7 @@ class ExceptionHandlerMiddleware(BaseHTTPMiddleware):
     such as lost connection
     """
 
-    def __init__(self, app, debug: list[bool]):
+    def __init__(self, app, debug: tuple[bool]):
         """
         Passing debug as a list with single element is a hack to be able to change the value
         on the application startup.
@@ -44,13 +44,21 @@ class ExceptionHandlerMiddleware(BaseHTTPMiddleware):
 
         except APIConnectionError as exc:
             logger.error(f"status: 502, detail: {{content: Couldn't connect to upstream server, info: {str(exc)}}}")
-            return GatewayErrorResponse(detail=f"Couldn't connect to upstream server, info: {str(exc)}}}")
+            return JSONResponse(
+                content=GatewayErrorResponse(detail=f"Couldn't connect to upstream server, info: {str(exc)}}}").dict(),
+                status_code=502,
+            )
 
         except APITimeoutError as exc:
             logger.error(
                 f"status: 504, detail: {{content: Didn't receive a timely response from upstream server, info: {str(exc)}}}"
             )
-            return TimeoutErrorResponse(detail=f"Didn't receive a timely response from upstream server, info: {str(exc)}}}")
+            return JSONResponse(
+                content=TimeoutErrorResponse(
+                    detail=f"Didn't receive a timely response from upstream server, info: {str(exc)}"
+                ),
+                status_code=504,
+            )
 
         except ObjectNotFoundError as exc:
             logger.error(
@@ -75,15 +83,18 @@ class ExceptionHandlerMiddleware(BaseHTTPMiddleware):
             )
 
             if self._debug[0]:
-                return JobErrorResponse(
-                    job_id=exc.job_id,
-                    error=str(exc.exc_value),
-                    error_type=str(exc.exc_type),
-                    path=request.url.query,
-                    trace=trace,
+                return JSONResponse(
+                    content=JobErrorResponse(
+                        job_id=exc.job_id,
+                        error=str(exc.exc_value),
+                        error_type=str(exc.exc_type),
+                        path=request.url.query,
+                        trace=trace,
+                    ).dict(),
+                    status_code=502,
                 )
 
-            return JobErrorResponse(job_id=exc.job_id)
+            return JSONResponse(content=JobErrorResponse(job_id=exc.job_id).dict(), status_code=502)
 
         except Exception as exc:  # pylint: disable=broad-except
             trace = list(
@@ -95,11 +106,11 @@ class ExceptionHandlerMiddleware(BaseHTTPMiddleware):
             )
 
             if self._debug[0]:
-                return ErrorResponse(
-                        error=str(exc),
-                        error_type=str(type(exc)),
-                        path=request.url.path,
-                        trace=" ".join(trace)
+                return JSONResponse(
+                    content=ErrorResponse(
+                        error=str(exc), error_type=str(type(exc)), path=request.url.path, trace=" ".join(trace)
+                    ).dict(),
+                    status_code=500,
                 )
 
-            return ErrorResponse()
+            return JSONResponse(content=ErrorResponse().dict(), status_code=500)

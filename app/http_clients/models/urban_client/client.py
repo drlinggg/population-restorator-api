@@ -26,23 +26,10 @@ logger = structlog.getLogger()
 class UrbanClient(BaseClient):
     """Urban API client that uses HTTP/HTTPS as transport."""
 
-    def __init__(self):
-        self.config: ApiConfig | None = config.urban_api
-
+    def __post_init__(self):
         if not (self.config.host.startswith("http")):
             logger.warning("http/https schema is not set, defaulting to http")
             self.config.host = f"http://{self.config.host}"
-
-    async def is_alive(self) -> bool:
-
-        url = f"{self.config.host}/api/v1/health_check/ping"
-
-        result = handle_request(url)
-
-        if result:
-            return True
-
-        return False
 
     def __str__(self):
         return "UrbanClient"
@@ -151,7 +138,7 @@ class UrbanClient(BaseClient):
         return territory_df
 
     @handle_exceptions
-    async def get_population_for_child_territories(self, parent_id: int) -> pd.DataFrame:
+    async def get_population_for_child_territories(self, parent_id: int, last_only: bool = True) -> pd.DataFrame:
         """
         Args: parent_id
         Returns: population dataframe with child territories with one level below and population of them for parent territory
@@ -173,8 +160,8 @@ class UrbanClient(BaseClient):
 
         params = {
             "parent_id": parent_id,
-            "indicators_ids": 1,
-            "last_only": "true",
+            "indicators_ids": self.config.const_request_params["population_indicator"],
+            "last_only": f"{last_only}",
         }
 
         headers = {
@@ -250,15 +237,13 @@ class UrbanClient(BaseClient):
 
         # getting response
 
-        house_type = "4"
-
         url = f"{self.config.host}/api/v1/territory/{territory_parent_id}/physical_objects_geojson"
 
         params = {
             "territory_id": territory_parent_id,
             "include_child_territories": "true",
             "cities_only": "true",
-            "physical_object_type_id": house_type,
+            "physical_object_type_id": self.config.const_request_params["house_type"],
         }
 
         headers = {
@@ -301,16 +286,15 @@ class UrbanClient(BaseClient):
         """
         # getting response
 
-        indicator_id_for_population = 1
         value_type = "real"
 
         url = f"{self.config.host}/api/v1/territory/{territory_id}/indicator_values"
 
         params = {
             "territory_id": territory_id,
-            "indicator_ids": indicator_id_for_population,
+            "indicator_ids": self.config.const_request_params["population_indicator"],
             "last_only": f"{last_only}",
-            "value_type": value_type,
+            "value_type": self.config.const_request_params["population_value_type_indicator"],
             "include_child_territories": "false",
             "cities_only": "false",
         }

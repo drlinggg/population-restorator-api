@@ -22,20 +22,10 @@ logger = structlog.getLogger()
 
 class SocDemoClient(BaseClient):
 
-    def __init__(self):
-        self.config: ApiConfig | None = config.socdemo_api
-
+    def __post_init__(self):
         if not (self.config.host.startswith("http")):
             logger.warning("http/https schema is not set, defaulting to http")
             self.config.host = f"http://{self.config.host}"
-
-    async def is_alive(self) -> bool:
-
-        url = f"{self.config.host}/health_check/ping"
-        result = await handle_request(url)
-        if result:
-            return True
-        return False
 
     def __str__(self):
         return "SocDemoClient"
@@ -56,7 +46,7 @@ class SocDemoClient(BaseClient):
 
         params = {
             "territory_id": territory_id,
-            "indicator_id": indicator_id,
+            "indicator_id": self.config.const_request_params["population_pyramid_indicator"],
         }
 
         headers = {

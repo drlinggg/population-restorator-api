@@ -2,12 +2,12 @@
 
 from .config import (
     ApiConfig,
-    WorkingDirConfig,
     AppConfig,
     FileLogger,
     LoggingConfig,
     PopulationRestoratorApiConfig,
     RedisQueueConfig,
+    WorkingDirConfig,
 )
 from .dotenv import try_load_envfile
 from .logging import configure_logging
