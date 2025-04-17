@@ -2,8 +2,6 @@
 health_check handler is defined here.
 """
 
-import asyncio
-
 from starlette import status
 
 from app.schemas import PingResponse
@@ -17,5 +15,4 @@ from .routers import system_router
     response_model=PingResponse,
 )
 async def check_health():
-    await asyncio.sleep(1)
     return PingResponse(message="pong!")

@@ -6,6 +6,8 @@ from datetime import datetime, timezone
 
 from fastapi import HTTPException, Query, Request, status
 
+from typing import Union
+
 from app.http_clients.common.exceptions import (
     APIConnectionError,
     APIError,
@@ -15,12 +17,15 @@ from app.http_clients.common.exceptions import (
 )
 from app.logic import TerritoriesService
 from app.schemas import (
-    DebugErrorResponse,
-    DebugJobErrorResponse,
+    ErrorResponse,
+    JobErrorResponse,
     JobCreatedResponse,
     JobResponse,
     SurvivabilityCoefficients,
     TerritoryResponse,
+    GatewayErrorResponse,
+    JobNotFoundErrorResponse,
+    TimeoutErrorResponse,
 )
 from app.utils import JobError
 
@@ -41,7 +46,7 @@ FOREIGN_API_EXCEPTIONS = [
     status_code=status.HTTP_201_CREATED,
     response_model=JobCreatedResponse,
     responses={
-        500: {"model": DebugErrorResponse, "description": "Internal Server Error"},
+        500: {"model": ErrorResponse, "description": "Internal Server Error"},
     },  # todo
 )
 async def balance(request: Request, territory_id: int):
@@ -59,9 +64,9 @@ async def balance(request: Request, territory_id: int):
     status_code=status.HTTP_201_CREATED,
     response_model=JobCreatedResponse,
     responses={
-        500: {"model": DebugErrorResponse, "description": "Internal Server Error"},
-        400: {"description": "Previous job {job_id} is not finished yet"},
-        404: {"description": "Previous job {job_id} not found"},
+        500: {"model": ErrorResponse, "description": "Internal Server Error"},
+        424: {"description": "Previous job is not finished yet"},
+        404: {"model": JobNotFoundErrorResponse, "description": "Previous job not found"},
     },  # todo
 )
 async def divide(
@@ -79,7 +84,7 @@ async def divide(
     elif prev_job and prev_job.is_finished:
         job = request.app.state.queue.enqueue(territories_service.divide, territory_id, prev_job.return_value()[1])
     elif prev_job and not prev_job.is_finished:
-        raise HTTPException(status_code=400, detail=f"Previous job {from_previous} is not finished yet.")
+        raise HTTPException(status_code=424, detail=f"Previous job {from_previous} is not finished yet.")
     else:
         raise HTTPException(status_code=404, detail=f"Previous job {from_previous} not found.")
 
@@ -91,16 +96,16 @@ async def divide(
     status_code=status.HTTP_201_CREATED,
     response_model=JobCreatedResponse,
     responses={
-        500: {"model": DebugErrorResponse, "description": "Internal Server Error"},
-        400: {"description": "Previous job {job_id} is not finished yet"},
-        404: {"description": "Previous job {job_id} not found"},
+        500: {"model": ErrorResponse, "description": "Internal Server Error"},
+        424: {"description": "Previous job is not finished yet"},
+        404: {"model": JobNotFoundErrorResponse, "description": "Previous job not found"},
     },  # todo
 )
 async def restore(
     request: Request,
     territory_id: int,
     survivability_coefficients: SurvivabilityCoefficients,
-    year_begin: int = Query(...),  # todo сделать чтобы это использовалось и бралось красиво епты
+    year_begin: int = Query(...),  # todo сделать чтобы это использовалось и бралось красиво
     year_end: int = Query(...),
     boys_to_girls: float = Query(...),
     fertility_coefficient: float = Query(...),
@@ -135,71 +140,19 @@ async def restore(
     responses={
         404: {
             "description": "Job not found",
-            "content": {
-                "application/json": {
-                    "examples": {
-                        "Job": {"value": {"detail": "Job not found"}},
-                        "Territory": {
-                            "value": {
-                                "detail": "Given object or its data is not found, therefore further calculations are impossible"
-                            }
-                        },
-                    }
-                }
-            },
+            "model": JobNotFoundErrorResponse
         },
         500: {
             "description": "Internal Server Error",
-            "content": {
-                "application/json": {
-                    "examples": {
-                        "Debug": {
-                            "value": DebugErrorResponse(
-                                error="Sample Error", error_type="ValueError", path="path", trace="Sample Trace"
-                            ).dict()
-                        },
-                        "Default": {"value": {"detail": "exception occured"}},
-                    }
-                }
-            },
+            "model": ErrorResponse
         },
         502: {
             "description": "Bad Gateway",
-            "content": {
-                "application/json": {
-                    "examples": {
-                        "Population-restorator debug": {
-                            "value": DebugJobErrorResponse(
-                                job_id="adaa6536-aa1f-45e5-8cee-2cc03694ae8e",
-                                error="Sample Error",
-                                error_type="ValueError",
-                                path="path",
-                                trace="Sample Trace",
-                            ).dict()
-                        },
-                        "Population-restorator default": {
-                            "value": {"job_id": "adaa6536-aa1f-45e5-8cee-2cc03694ae8e", "detail": "Exception occured"}
-                        },
-                        "Couldn't connect to upstream server": {
-                            "value": {"detail": "couldn't connect to upstream server"}
-                        },
-                    }
-                }
-            },
-        },
-        503: {
-            "description": "Service Unavailable",
-            "content": {"application/json": {"examples": {"Default": {"value": {"detail": "Service Unavailable"}}}}},
+            "model": Union[JobErrorResponse, GatewayErrorResponse]
         },
         504: {
             "description": "Didn't receive a timely response from upstream server",
-            "content": {
-                "application/json": {
-                    "examples": {
-                        "Default": {"value": {"detail": "Didn't receive a timely response from upstream server"}}
-                    }
-                }
-            },
+            "model": TimeoutErrorResponse
         },
     },
 )
@@ -207,7 +160,7 @@ async def get_status(request: Request, job_id: str):
     job = request.app.state.queue.fetch_job(job_id)
 
     if job is None:
-        raise HTTPException(404, detail="Job not found")
+        return JobNotFoundErrorResponse(detail=job_id)
 
     if job.is_finished:
         return JobResponse(
@@ -217,7 +170,6 @@ async def get_status(request: Request, job_id: str):
         )
 
     if job.is_failed:
-        job.refresh()
         exc_type = job.meta["exc_type"]["exc_type"]
         exc_value = job.meta["exc_value"]["exc_value"]
 

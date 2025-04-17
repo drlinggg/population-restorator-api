@@ -5,11 +5,7 @@ import typing as tp
 import uvicorn
 
 from app.utils import (
-    ApiConfig,
-    WorkingDirConfig,
-    AppConfig, 
     PopulationRestoratorApiConfig, 
-    RedisQueueConfig
 )
 
 
@@ -21,41 +17,7 @@ def _run_uvicorn(configuration: dict[str, tp.Any]) -> tp.NoReturn:
 
 
 def main():
-    # it does triple reading rn but i dont sure if its bad
     config = PopulationRestoratorApiConfig.from_file_or_default()
-    logging_section = config.logging
-
-    config = PopulationRestoratorApiConfig(
-        app=AppConfig(
-            host=config.app.host,
-            port=config.app.port,
-            debug=config.app.debug,
-            name=config.app.name,
-        ),
-        working_dir=WorkingDirConfig(
-            divide_working_db_path=config.working_dir.divide_working_db_path,
-            forecast_working_dir_path=config.working_dir.forecast_working_dir_path,
-        ),
-        redis_queue=RedisQueueConfig(
-            host=config.redis_queue.host,
-            port=config.redis_queue.port,
-            db=config.redis_queue.db,
-            queue_name=config.redis_queue.queue_name,
-        ),
-        logging=logging_section,
-        urban_api=ApiConfig(
-            host=config.urban_api.host,
-            port=config.urban_api.port,
-            api_key=config.urban_api.api_key,
-            base_path=config.urban_api.base_path,
-        ),
-        socdemo_api=ApiConfig(
-            host=config.socdemo_api.host,
-            port=config.socdemo_api.port,
-            api_key=config.socdemo_api.api_key,
-            base_path=config.socdemo_api.base_path,
-        ),
-    )
 
     temp_yaml_config_path = os.path.join(tempfile.gettempdir(), os.urandom(24).hex())
     config.dump(temp_yaml_config_path)

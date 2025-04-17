@@ -1,6 +1,6 @@
 [project]
 name = "population-restorator-api"
-version = "0.1.0"
+version = "0.0.1"
 description = "todo"
 authors = [
     {name = "Banakh Andrei",email = "uuetsukeu@mail.ru"}
@@ -25,8 +25,11 @@ dependencies = [
     "rq (>=2.1.0,<3.0.0)",
     "asyncpg (>=0.30.0,<0.31.0)",
     "multiprocess (>=0.70.17,<0.71.0)",
-    "population-restorator @ file:///home/banakh/work/population-restorator-api/population-restorator",
+    "population-restorator"
 ]
+
+[tool.poetry.dependencies]
+population-restorator = { source='./population-restorator', develop=true }
 
 [tool.poetry]
 packages = [{ include = "app" }]

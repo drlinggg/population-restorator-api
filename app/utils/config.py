@@ -43,11 +43,9 @@ class RedisQueueConfig:
 @dataclass
 class ApiConfig:
     """defaut api config"""
-
     host: str
     port: int
     api_key: str
-    base_path: str
 
 
 @dataclass
@@ -148,9 +146,9 @@ class PopulationRestoratorApiConfig:
             redis_queue=RedisQueueConfig(host="localhost", port="6379", db=0, queue_name="default"),
             logging=LoggingConfig(level="INFO"),
             urban_api=ApiConfig(
-                host="https://urban-api.idu.kanootoko.org", port=443, api_key="todo", base_path="/api/v1"
+                host="https://urban-api.idu.kanootoko.org", port=443, api_key="todo",
             ),
-            socdemo_api=ApiConfig(host="todo", port=443, api_key="todo", base_path="/api/v1"),
+            socdemo_api=ApiConfig(host="todo", port=443, api_key="todo"),
         )
 
     @classmethod

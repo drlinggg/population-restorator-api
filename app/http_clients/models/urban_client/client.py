@@ -35,7 +35,7 @@ class UrbanClient(BaseClient):
 
     async def is_alive(self) -> bool:
 
-        url = f"{self.config.host}{self.config.bash_path}/health_check/ping"
+        url = f"{self.config.host}/api/v1/health_check/ping"
 
         result = handle_request(url)
 
@@ -66,7 +66,7 @@ class UrbanClient(BaseClient):
         """
 
         # getting response
-        url = f"{self.config.host}{self.config.base_path}/all_territories"
+        url = f"{self.config.host}/api/v1/all_territories"
 
         params = {
             "parent_id": parent_id,
@@ -119,7 +119,7 @@ class UrbanClient(BaseClient):
         """
 
         # getting response
-        url = f"{self.config.host}{self.config.base_path}/territories/{territory_id}"
+        url = f"{self.config.host}/api/v1/territories/{territory_id}"
 
         params = {
             "territories_ids": territory_id,
@@ -169,7 +169,7 @@ class UrbanClient(BaseClient):
 
         # getting response
 
-        url = f"{self.config.host}{self.config.base_path}/territory/indicator_values"
+        url = f"{self.config.host}/api/v1/territory/indicator_values"
 
         params = {
             "parent_id": parent_id,
@@ -252,7 +252,7 @@ class UrbanClient(BaseClient):
 
         house_type = "4"
 
-        url = f"{self.config.host}{self.config.base_path}/territory/{territory_parent_id}/physical_objects_geojson"
+        url = f"{self.config.host}/api/v1/territory/{territory_parent_id}/physical_objects_geojson"
 
         params = {
             "territory_id": territory_parent_id,
@@ -304,7 +304,7 @@ class UrbanClient(BaseClient):
         indicator_id_for_population = 1
         value_type = "real"
 
-        url = f"{self.config.host}{self.config.base_path}/territory/{territory_id}/indicator_values"
+        url = f"{self.config.host}/api/v1/territory/{territory_id}/indicator_values"
 
         params = {
             "territory_id": territory_id,

@@ -22,9 +22,7 @@ urban_api:
   host: "https://urban-api.idu.kanootoko.org"
   port: 443
   api_key: null
-  base_path: "/api/v1"
 socdemo_api:
   host: "http://10.32.1.108:8000"
   port: 443
   api_key: null
-  base_path: ""

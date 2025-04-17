@@ -10,11 +10,15 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.http_clients.common import (
     APIConnectionError,
-    APIError,
     APITimeoutError,
     ObjectNotFoundError,
 )
-from app.schemas import DebugErrorResponse, DebugJobErrorResponse
+from app.schemas import (
+    ErrorResponse,
+    JobErrorResponse,
+    GatewayErrorResponse,
+    TimeoutErrorResponse,
+)
 from app.utils import JobError
 
 
@@ -40,14 +44,14 @@ class ExceptionHandlerMiddleware(BaseHTTPMiddleware):
 
         except APIConnectionError as exc:
             logger.error(f"status: 502, detail: {{content: Couldn't connect to upstream server, info: {str(exc)}}}")
-            return JSONResponse(status_code=502, content={"detail": "Couldn't connect to upstream server"})
+            return GatewayErrorResponse(detail=f"Couldn't connect to upstream server, info: {str(exc)}}}")
+
         except APITimeoutError as exc:
             logger.error(
                 f"status: 504, detail: {{content: Didn't receive a timely response from upstream server, info: {str(exc)}}}"
             )
-            return JSONResponse(
-                status_code=504, content={"detail": "Didn't receive a timely response from upstream server"}
-            )
+            return TimeoutErrorResponse(detail=f"Didn't receive a timely response from upstream server, info: {str(exc)}}}")
+
         except ObjectNotFoundError as exc:
             logger.error(
                 f"status: 404, detail: {{ "
@@ -55,15 +59,7 @@ class ExceptionHandlerMiddleware(BaseHTTPMiddleware):
                 f"therefore further calculations are impossible, "
                 f"info: {str(exc)}}}"
             )
-            return JSONResponse(
-                status_code=404,
-                content={
-                    "detail": "Given object or its data is not found, therefore further calculations are impossible."
-                },
-            )
-        except APIError as exc:
-            logger.error("status: 503, content: todo")
-            return JSONResponse(status_code=503, content={"detail": "todo"})
+            return JSONResponse(content="couldn't find object or its data", status_code=404)
 
         except JobError as exc:
             trace = exc.exc_info  # todo fix \n formatting
@@ -79,21 +75,17 @@ class ExceptionHandlerMiddleware(BaseHTTPMiddleware):
             )
 
             if self._debug[0]:
-                return JSONResponse(
-                    DebugJobErrorResponse(
-                        job_id=exc.job_id,
-                        error=str(exc.exc_value),
-                        error_type=str(exc.exc_type),
-                        path=request.url.query,
-                        trace=trace,
-                    ).dict(),
-                    status_code=502,
+                return JobErrorResponse(
+                    job_id=exc.job_id,
+                    error=str(exc.exc_value),
+                    error_type=str(exc.exc_type),
+                    path=request.url.query,
+                    trace=trace,
                 )
 
-            return JSONResponse(status_code=502, content={"detail: job failed, job_id: {exc.job_id}"})
+            return JobErrorResponse(job_id=exc.job_id)
 
         except Exception as exc:  # pylint: disable=broad-except
-            error_status = 500
             trace = list(
                 itertools.chain.from_iterable(map(lambda x: x.split("\n"), traceback.format_tb(exc.__traceback__)))
             )
@@ -103,11 +95,11 @@ class ExceptionHandlerMiddleware(BaseHTTPMiddleware):
             )
 
             if self._debug[0]:
-                return JSONResponse(
-                    DebugErrorResponse(
-                        error=str(exc), error_type=str(type(exc)), path=request.url.path, trace=" ".join(trace)
-                    ).dict(),
-                    status_code=error_status,
+                return ErrorResponse(
+                        error=str(exc),
+                        error_type=str(type(exc)),
+                        path=request.url.path,
+                        trace=" ".join(trace)
                 )
 
-            return JSONResponse({"detail": "Exception occured"}, status_code=error_status)
+            return ErrorResponse()

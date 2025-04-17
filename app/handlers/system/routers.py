@@ -12,4 +12,4 @@ system_routers_list = [
     system_router,
 ]
 
-all = ["system_routers_list,"]
+all = ["system_routers_list"]

@@ -31,7 +31,7 @@ class SocDemoClient(BaseClient):
 
     async def is_alive(self) -> bool:
 
-        url = f"{self.config.host}{self.config.bash_path}/health_check/ping"
+        url = f"{self.config.host}/health_check/ping"
         result = await handle_request(url)
         if result:
             return True
@@ -52,7 +52,7 @@ class SocDemoClient(BaseClient):
 
         # getting response
 
-        url = f"{self.config.host}{self.config.base_path}/indicators/{indicator_id}/{territory_id}/detailed"
+        url = f"{self.config.host}/indicators/{indicator_id}/{territory_id}/detailed"
 
         params = {
             "territory_id": territory_id,

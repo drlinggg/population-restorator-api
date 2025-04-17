@@ -9,24 +9,23 @@ from pydantic import BaseModel, Field
 
 class TerritoryResponse(BaseModel):
     performed_at: str = Field(..., description="time of finishing operation", examples=["22-01-2025 09:53:46"])
-    # todo
 
 
-class DebugErrorResponse(BaseModel):
+class ErrorResponse(BaseModel):
     detail: str = "Exception occured"
-    error: str
-    error_type: str
-    path: str
-    trace: str
+    error: Optional[str] = None
+    error_type: Optional[str] = None
+    path: Optional[str] = None
+    trace: Optional[str] = None
 
 
-class DebugJobErrorResponse(BaseModel):
-    detail: str = "Exception occured"
+class JobErrorResponse(BaseModel):
+    detail: str = "Exception occured in job execution"
     job_id: str
-    error: str
-    error_type: str
-    path: str
-    trace: str
+    error: Optional[str] = None
+    error_type: Optional[str] = None
+    path: Optional[str] = None
+    trace: Optional[str] = None
 
 
 class JobResponse(BaseModel):
@@ -38,6 +37,18 @@ class JobResponse(BaseModel):
 class JobCreatedResponse(BaseModel):
     job_id: str
     status: str
+
+
+class GatewayErrorResponse(BaseModel):
+    detail: str
+
+
+class TimeoutErrorResponse(BaseModel):
+    detail: str
+
+
+class JobNotFoundErrorResponse(BaseModel):
+    detail: str
 
 
 class SurvivabilityCoefficients(BaseModel):
