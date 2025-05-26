@@ -32,4 +32,7 @@ socdemo_api:
   api_key: null
   const_request_params:
     population_pyramid_indicator: 2
-
+saving_api:
+  host: "http://10.32.1.58:8000"
+  port: 443
+  api_key: null

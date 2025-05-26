@@ -6,13 +6,18 @@ import multiprocess as mp
 from fastapi import FastAPI
 
 from app.handlers.routers import routers_list
-from app.http_clients import SocDemoClient, UrbanClient
+from app.http_clients import SocDemoClient, UrbanClient, SavingClient
 from app.logic import TerritoriesService
 from app.middlewares import (
     ExceptionHandlerMiddleware,
     LoggingMiddleware,
 )
-from app.utils import PopulationRestoratorApiConfig, configure_logging, start_redis_queue, start_rq_worker
+from app.utils import (
+    PopulationRestoratorApiConfig,
+    configure_logging,
+    start_redis_queue,
+    start_rq_worker
+)
 
 
 def get_app(prefix: str = "/api") -> FastAPI:
@@ -54,6 +59,7 @@ async def lifespan(app: FastAPI):
     app.state.territories_service = TerritoriesService(
         urban_client=UrbanClient(app_config.urban_api),
         socdemo_client=SocDemoClient(app_config.socdemo_api),
+        saving_client=SavingClient(app_config.saving_api),
         debug=app_config.app.debug,
         forecast_working_dir_path=app_config.working_dir.forecast_working_dir_path,
         divide_working_db_path=app_config.working_dir.divide_working_db_path,

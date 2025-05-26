@@ -1,6 +1,7 @@
 """
 SocDemoClient is defined here for taking territories population pyramids
 """
+from __future__ import annotations
 
 import os
 
@@ -31,23 +32,26 @@ class SocDemoClient(BaseClient):
         return "SocDemoClient"
 
     @handle_exceptions
-    async def get_population_pyramid(self, territory_id: int) -> tuple[list[int], list[int], list[str]]:
+    async def get_population_pyramid(self, territory_id: int, oktmo_code: int, year: int | None = None) -> tuple[list[int], list[int], list[str]]:
         """
-        Args: territory_id
+        Args: territory_id, oktmo_code, year
         Returns: tuple with men,women, indexes lists
         where men[i] is amount of men who are indexes[i] years old
         """
 
-        indicator_id: str = "2"  # for populaion
+        indicator_id = self.config.const_request_params["population_pyramid_indicator"]
 
         # getting response
-
         url = f"{self.config.host}/indicators/{indicator_id}/{territory_id}/detailed"
 
         params = {
             "territory_id": territory_id,
+            "oktmo_code": oktmo_code,
             "indicator_id": self.config.const_request_params["population_pyramid_indicator"],
         }
+
+        if year is not None:
+            params["year"] = year
 
         headers = {
             "accept": "application/json",
@@ -56,10 +60,11 @@ class SocDemoClient(BaseClient):
         data = await handle_request(url, params, headers)
 
         if data is None:
-            raise ObjectNotFoundError()
+            raise ObjectNotFoundError(f"no population pyramid for territory {territory_id} with oktmo code {oktmo_code}, year {year}")
 
         pyramids = pd.DataFrame(data)
-        latest_pyramid = pyramids.loc[pyramids["year"] == max(pyramids["year"])].iloc[0]
+        year = year or max(pyramids["year"])
+        pyramid = pyramids.loc[pyramids["year"] == year].iloc[0]
 
         # formatting
 
@@ -67,7 +72,7 @@ class SocDemoClient(BaseClient):
         women: list[int] = list()
         indexes: list[str] = list()
 
-        for item in latest_pyramid["data"]:
+        for item in pyramid["data"]:
             index_start = item["age_start"]
             # bad idea but we'll fix that
             index_end = item["age_end"] if item["age_end"] is not None else 130

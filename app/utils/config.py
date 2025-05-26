@@ -46,8 +46,8 @@ class ApiConfig:
 
     host: str
     port: int
-    api_key: str
-    const_request_params: dict[str, Any]
+    api_key: str | None
+    const_request_params: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -86,6 +86,7 @@ class PopulationRestoratorApiConfig:
     logging: LoggingConfig
     urban_api: ApiConfig
     socdemo_api: ApiConfig
+    saving_api: ApiConfig
 
     def to_order_dict(self) -> OrderedDict:
         """OrderDict transformer."""
@@ -109,6 +110,7 @@ class PopulationRestoratorApiConfig:
                 ("logging", to_ordered_dict_recursive(self.logging)),
                 ("urban_api", to_ordered_dict_recursive(self.urban_api)),
                 ("socdemo_api", to_ordered_dict_recursive(self.socdemo_api)),
+                ("saving_api", to_ordered_dict_recursive(self.saving_api)),
             ]
         )
 
@@ -154,8 +156,11 @@ class PopulationRestoratorApiConfig:
                 const_request_params={"some_path_param": 4},
             ),
             socdemo_api=ApiConfig(
-                host="todo", port=443, api_key="todo", const_request_params={"another_param": "test"}
+                host="todo", port=443, api_key=None, const_request_params={"another_param": "test"}
             ),
+            saving_api=ApiConfig(
+                host="todo", port=443, api_key=None
+            )
         )
 
     @classmethod
@@ -176,6 +181,7 @@ class PopulationRestoratorApiConfig:
                 logging=LoggingConfig(**data.get("logging", {})),
                 urban_api=ApiConfig(**data.get("urban_api", {})),
                 socdemo_api=ApiConfig(**data.get("socdemo_api", {})),
+                saving_api=ApiConfig(**data.get("saving_api", {}))
             )
         except Exception as exc:
             raise ValueError(f"Could not read app config file: {file}") from exc

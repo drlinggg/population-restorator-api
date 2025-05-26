@@ -43,9 +43,9 @@ class ExceptionHandlerMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
 
         except APIConnectionError as exc:
-            logger.error(f"status: 502, detail: {{content: Couldn't connect to upstream server, info: {str(exc)}}}")
+            logger.error(f"status: 502, detail: {{content: Couldn't connect to upstream server, info: { {str(exc)} }")
             return JSONResponse(
-                content=GatewayErrorResponse(detail=f"Couldn't connect to upstream server, info: {str(exc)}}}").dict(),
+                content=GatewayErrorResponse(detail=f"Couldn't connect to upstream server, info: { {str(exc)} }").dict(),
                 status_code=502,
             )
 
@@ -67,7 +67,7 @@ class ExceptionHandlerMiddleware(BaseHTTPMiddleware):
                 f"therefore further calculations are impossible, "
                 f"info: {str(exc)}}}"
             )
-            return JSONResponse(content="couldn't find object or its data", status_code=404)
+            return JSONResponse(content=f"couldn't find object or its data, detail: {{ {str(exc)} }}", status_code=404)
 
         except JobError as exc:
             trace = exc.exc_info  # todo fix \n formatting

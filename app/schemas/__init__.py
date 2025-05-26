@@ -13,4 +13,5 @@ from .territories import (
     SurvivabilityCoefficients,
     TerritoryResponse,
     TimeoutErrorResponse,
+    UrbanSocialDistributionPost,
 )

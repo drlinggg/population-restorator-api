@@ -2,9 +2,11 @@
 Response models are defined here
 """
 
-from typing import Optional
+from typing import Optional, Literal
 
 from pydantic import BaseModel, Field
+
+from app.models import UrbanSocialDistribution
 
 
 class TerritoryResponse(BaseModel):
@@ -54,3 +56,16 @@ class JobNotFoundErrorResponse(BaseModel):
 class SurvivabilityCoefficients(BaseModel):
     men: tuple
     women: tuple
+
+
+class UrbanSocialDistributionPost(BaseModel):
+    building_id: int
+    scenario: Literal["NEGATIVE", "NEUTRAL", "POSITIVE"]
+    year: int
+    sex: Literal["MALE", "FEMALE"]
+    age: int
+    value: int
+
+    @classmethod
+    def from_model(model: UrbanSocialDistribution):
+        return UrbanSocialDistributionPost(**model.model_dump())

@@ -6,9 +6,12 @@ with information about population, houses & territories
 from __future__ import annotations
 
 import os
+import asyncio
 
 import pandas as pd
 import structlog
+from datetime import date
+from typing import Any
 
 from app.http_clients.common import (
     BaseClient,
@@ -16,7 +19,7 @@ from app.http_clients.common import (
     handle_exceptions,
     handle_request,
 )
-from app.utils import ApiConfig, PopulationRestoratorApiConfig
+from app.utils import PopulationRestoratorApiConfig
 
 
 config = PopulationRestoratorApiConfig.from_file_or_default(os.getenv("CONFIG_PATH"))
@@ -88,6 +91,31 @@ class UrbanClient(BaseClient):
         return formatted_territories_df
 
     @handle_exceptions
+    async def get_oktmo_of_territory_by_urban_db_id(self, territory_id: int) -> int:
+        """
+        Args: territory_id (int)
+        Returns: oktmo code (int)
+        """
+
+        # getting response
+        url = f"{self.config.host}/api/v1/territories/{territory_id}"
+
+        params = {
+            "territories_ids": territory_id,
+            "centers_only": "true"
+        }
+
+        headers = {
+            "accept": "application/json",
+        }
+
+        data = await handle_request(url, params, headers)
+
+        if data is None:
+            raise ObjectNotFoundError()
+        return int(data["features"][0]["properties"]["oktmo_code"])
+
+    @handle_exceptions
     async def get_territory(self, territory_id: int) -> pd.DataFrame:
         """
         Args: territory_id
@@ -98,10 +126,11 @@ class UrbanClient(BaseClient):
         name (str): name of current territory
         parent_id (int): territory on level above that has current territory as a child
         geometry (geojson) : coords of current territory
+        oktmo (int): oktmo territory's code
 
-             territory_id                                name  parent_id  level                                           geometry
-          3             3     Самойловское сельское поселение          2      4  {'type': 'Polygon', 'coordinates': [[[34.42168...
-        ...          ...                                 ...        ...     ...                                                ...
+             territory_id                                name  parent_id  level                                           geometry  oktmo
+          3             3     Самойловское сельское поселение          2      4  {'type': 'Polygon', 'coordinates': [[[34.42168...  43400
+        ...          ...                                 ...        ...     ...                                                ...    ...
 
         """
 
@@ -124,7 +153,7 @@ class UrbanClient(BaseClient):
         data = data["features"][0]
 
         # formatting
-        territory_df = pd.DataFrame(columns=["territory_id", "name", "parent_id", "level", "geometry"])
+        territory_df = pd.DataFrame(columns=["territory_id", "name", "parent_id", "level", "geometry", "oktmo"])
         territory_df.set_index("territory_id")
 
         territory_df.loc[territory_id] = {
@@ -133,6 +162,7 @@ class UrbanClient(BaseClient):
             "parent_id": data["properties"]["parent"]["id"],
             "level": data["properties"]["level"],
             "geometry": data["geometry"],
+            "oktmo": data["properties"]["oktmo_code"],
         }
 
         return territory_df
@@ -207,15 +237,15 @@ class UrbanClient(BaseClient):
         population_df.set_index("territory_id")
 
         # get population of child territories one level below for each parent territory and put it in df
-        for parent_id in parent_ids:
-            temp_population_df = await self.get_population_for_child_territories(parent_id)
-
-            if temp_population_df is None:
-                raise ObjectNotFoundError()
-            population_df = pd.concat([population_df, temp_population_df])
+        tasks = [
+            self.get_population_for_child_territories(parent_id)
+            for parent_id in parent_ids
+        ]
+        results = await asyncio.gather(*tasks)
+        population_dfs = [df for df in results if df is not None]
+        population_df = pd.concat(population_dfs)
 
         # merge dfs
-
         return pd.merge(territories_df, population_df, on="territory_id", how="left")
 
     async def get_houses_from_territories(self, territory_parent_id: int) -> pd.DataFrame:
@@ -279,25 +309,27 @@ class UrbanClient(BaseClient):
         return formatted_houses_df
 
     @handle_exceptions
-    async def get_population_from_territory(self, territory_id: int, last_only: bool = True) -> int:
+    async def get_population_from_territory(self, territory_id: int, start_date: date | None = None) -> int:
         """
-        Args: territory_id (int): id of given territory
+        Args:
+            territory_id (int): id of given territory
+            start_date (date): earliest date to be searched for, None for the latest
         Returns: amount of people on this territory
         """
         # getting response
-
-        value_type = "real"
-
         url = f"{self.config.host}/api/v1/territory/{territory_id}/indicator_values"
 
         params = {
             "territory_id": territory_id,
             "indicator_ids": self.config.const_request_params["population_indicator"],
-            "last_only": f"{last_only}",
+            "last_only": f"{start_date is None}",
             "value_type": self.config.const_request_params["population_value_type_indicator"],
             "include_child_territories": "false",
             "cities_only": "false",
         }
+
+        if start_date is not None:
+            params["start_date"] = str(start_date),
 
         headers = {
             "accept": "application/json",
@@ -308,6 +340,16 @@ class UrbanClient(BaseClient):
         if data is None:
             raise ObjectNotFoundError()
 
+        if start_date is None:
+            return int(data[0]["value"])
+
+        indicator_value_saved: dict[str, Any] = None
+        start_date = str(start_date)
+        for indicator_value in data:
+            if indicator_value["date_value"] >= start_date and indicator_value_saved is None or \
+                (indicator_value["date_value"] >= start_date and indicator_value_saved is None
+                 and indicator_value["date_value"] < indicator_value_saved):
+                indicator_value_saved = indicator_value
+
         # formatting
-        population = data[0]["value"]
-        return int(population)
+        return int(indicator_value_saved["value"])
