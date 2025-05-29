@@ -32,7 +32,7 @@ class SocDemoClient(BaseClient):
         return "SocDemoClient"
 
     @handle_exceptions
-    async def get_population_pyramid(self, territory_id: int, oktmo_code: int, year: int | None = None) -> tuple[list[int], list[int], list[str]]:
+    async def get_population_pyramid(self, territory_id: int, oktmo_code: int | None = None, year: int | None = None) -> tuple[list[int], list[int], list[str]]:
         """
         Args: territory_id, oktmo_code, year
         Returns: tuple with men,women, indexes lists
@@ -46,9 +46,11 @@ class SocDemoClient(BaseClient):
 
         params = {
             "territory_id": territory_id,
-            "oktmo_code": oktmo_code,
             "indicator_id": self.config.const_request_params["population_pyramid_indicator"],
         }
+
+        if oktmo_code is not None:
+            params["oktmo_code"] = oktmo_code
 
         if year is not None:
             params["year"] = year

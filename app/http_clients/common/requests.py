@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import aiohttp
 import structlog
+import asyncio
 
 from .exceptions import InvalidStatusCode
 
@@ -20,6 +21,9 @@ async def handle_request(url: str, params: dict[str, any] = {}, headers: dict[st
             logger = structlog.get_logger()
             logger.info(
                 f"sent request: {{request: {url}, params: {params}, headers: {headers}, status: {response.status} }}"
+            )
+            logger.debug(
+                f"Response headers: {response.headers}"
             )
 
             if response.status == 404:

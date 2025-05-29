@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import os
 import asyncio
+from asyncio import Semaphore
 
 import pandas as pd
 import structlog
@@ -60,7 +61,7 @@ class UrbanClient(BaseClient):
 
         params = {
             "parent_id": parent_id,
-            "get_all_levels": "True",
+            "get_all_levels": "true",
         }
 
         headers = {
@@ -68,9 +69,6 @@ class UrbanClient(BaseClient):
         }
 
         data = await handle_request(url, params, headers)
-
-        if data is None:
-            raise ObjectNotFoundError()
 
         internal_territories_df = pd.DataFrame(data)
 
@@ -91,7 +89,7 @@ class UrbanClient(BaseClient):
         return formatted_territories_df
 
     @handle_exceptions
-    async def get_oktmo_of_territory_by_urban_db_id(self, territory_id: int) -> int:
+    async def get_oktmo_of_territory_by_urban_db_id(self, territory_id: int) -> int | None:
         """
         Args: territory_id (int)
         Returns: oktmo code (int)
@@ -113,7 +111,10 @@ class UrbanClient(BaseClient):
 
         if data is None:
             raise ObjectNotFoundError()
-        return int(data["features"][0]["properties"]["oktmo_code"])
+        if data["features"][0]["properties"]["oktmo_code"] is not None:
+            return int(data["features"][0]["properties"]["oktmo_code"])
+        else:
+            return None
 
     @handle_exceptions
     async def get_territory(self, territory_id: int) -> pd.DataFrame:
@@ -139,6 +140,7 @@ class UrbanClient(BaseClient):
 
         params = {
             "territories_ids": territory_id,
+            "centers_only": "true"
         }
 
         headers = {
@@ -187,11 +189,12 @@ class UrbanClient(BaseClient):
         # getting response
 
         url = f"{self.config.host}/api/v1/territory/indicator_values"
-
+        #todo add time
         params = {
             "parent_id": parent_id,
-            "indicators_ids": self.config.const_request_params["population_indicator"],
-            "last_only": f"{last_only}",
+            "indicator_ids": self.config.const_request_params["population_indicator"],
+            "last_only": "true" if last_only else "false",
+            "value_type": self.config.const_request_params["population_value_type_indicator"],
         }
 
         headers = {
@@ -236,14 +239,22 @@ class UrbanClient(BaseClient):
         population_df = pd.DataFrame(columns=["territory_id", "population"])
         population_df.set_index("territory_id")
 
+        semaphore = Semaphore(5)
+
+        async def fetch_with_semaphore(parent_id):
+            async with semaphore:
+                return await self.get_population_for_child_territories(parent_id)
+
         # get population of child territories one level below for each parent territory and put it in df
         tasks = [
-            self.get_population_for_child_territories(parent_id)
+            fetch_with_semaphore(parent_id)
             for parent_id in parent_ids
         ]
+
         results = await asyncio.gather(*tasks)
         population_dfs = [df for df in results if df is not None]
-        population_df = pd.concat(population_dfs)
+        if len(population_dfs) != 0:
+            population_df = pd.concat(population_dfs)
 
         # merge dfs
         return pd.merge(territories_df, population_df, on="territory_id", how="left")
@@ -274,6 +285,7 @@ class UrbanClient(BaseClient):
             "include_child_territories": "true",
             "cities_only": "true",
             "physical_object_type_id": self.config.const_request_params["house_type"],
+            "centers_only": "true" #???
         }
 
         headers = {
@@ -293,10 +305,19 @@ class UrbanClient(BaseClient):
         formatted_houses_df.set_index("house_id", drop=False, inplace=True)
 
         for i in internal_houses_df["features"]:
-
-            living_area_modeled = i["properties"]["building"]["properties"]["living_area_modeled"]
-            living_area_official = i["properties"]["building"]["properties"]["living_area_official"]
-
+            try:
+                living_area_modeled = i["properties"]["building"]["properties"]["living_area_modeled"]
+                living_area_official = i["properties"]["building"]["properties"]["living_area_official"]
+            except KeyError as exc:
+                logger.error(f"house with id {i['properties']['building']['id']} has no living_area property")
+                logger.error(exc)
+                logger.error(i)
+                continue
+            except TypeError as exc:
+                logger.error(f"something wrong with house properties territory_parent_id: {territory_parent_id} house_id: {i['properties']['territories'][0]['id']}")
+                logger.error(exc)
+                logger.error(i)
+                continue
             formatted_houses_df.loc[i["properties"]["building"]["id"]] = {
                 # "name": i["properties"]["name"],
                 "house_id": i["properties"]["building"]["id"],
@@ -322,7 +343,7 @@ class UrbanClient(BaseClient):
         params = {
             "territory_id": territory_id,
             "indicator_ids": self.config.const_request_params["population_indicator"],
-            "last_only": f"{start_date is None}",
+            "last_only": 'true' if start_date is None else 'false',
             "value_type": self.config.const_request_params["population_value_type_indicator"],
             "include_child_territories": "false",
             "cities_only": "false",

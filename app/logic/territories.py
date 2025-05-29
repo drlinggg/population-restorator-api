@@ -5,7 +5,7 @@ and perfom population-restorator library executing
 """
 
 from __future__ import annotations
-
+import math
 import asyncio
 import typing as tp
 from datetime import date
@@ -85,8 +85,8 @@ class TerritoriesService:
 
         internal_territories_df = await self.urban_client.bind_population_to_territories(internal_territories_df)
 
-        # internal_territories_df.to_csv("population-restorator/sample_data/balancer/territories.csv")
-        # internal_houses_df.to_csv("population-restorator/sample_data/balancer/houses.csv")
+        #internal_territories_df.to_csv("population-restorator/sample_data/balancer/territories.csv")
+        #internal_houses_df.to_csv("population-restorator/sample_data/balancer/houses.csv")
 
         return prbalance(
             population,
@@ -116,10 +116,14 @@ class TerritoriesService:
             distribution: pd.Series, todo
         """
         if houses_df is None:
-            houses_df = (await self.balance(territory_id=territory_id, start_date=start_date))[1]
+            test_results = (await self.balance(territory_id=territory_id, start_date=start_date))
+            #test_results[0].to_csv(f"./territories{territory_id}.csv") #toberemoved
+            #test_results[1].to_csv(f"./houses{territory_id}.csv")
+            houses_df = test_results[1]
+
+        year = start_date.year if start_date is not None else None
 
         oktmo_code: int = await self.urban_client.get_oktmo_of_territory_by_urban_db_id(territory_id)
-        year = start_date.year if start_date is not None else None
         men, women, indexes = await self.socdemo_client.get_population_pyramid(territory_id, oktmo_code, year)
 
         men_prob = [x / sum(men) for x in men]
@@ -158,7 +162,8 @@ class TerritoriesService:
         input_dir: str,
         territory_id: int,
         year_begin: int,
-        years: int
+        years: int,
+        scenario: tp.Literal["NEGATIVE", "NEUTRAL", "POSIVITE"],
     ):
         """
         This method extracts from forecast output dbs and posts it to saving api
@@ -170,7 +175,10 @@ class TerritoriesService:
             years: int, for how many years saving is going to be
         """
 
-        db_paths = [f"{input_dir}/year_{year}.sqlite" for year in range(year_begin + 1, year_begin + years + 1)]
+        db_paths = [
+            f"{input_dir}/year_{year}_terr_{territory_id}_scen_{scenario}.sqlite" 
+            for year in range(year_begin + 1, year_begin + years + 1)
+        ]
         cur_year = year_begin + 1
 
         logger = structlog.get_logger()
@@ -192,7 +200,7 @@ class TerritoriesService:
                 buildings_data.append(
                     UrbanSocialDistribution(
                         building_id=values["house_id"],
-                        scenario="NEUTRAL", # add scenario here
+                        scenario=scenario,
                         year=cur_year,
                         sex="MALE",
                         age=values["age"],
@@ -202,7 +210,7 @@ class TerritoriesService:
                 buildings_data.append(
                     UrbanSocialDistribution(
                         building_id=values["house_id"],
-                        scenario="NEUTRAL",  # add scenario here
+                        scenario=scenario,
                         year=cur_year,
                         sex="FEMALE",
                         age=values["age"],
@@ -211,7 +219,7 @@ class TerritoriesService:
                 )
             cur_year += 1
             #await self.saving_client.post_forecasted_data(buildings_data)
-            with open("test.txt", 'w+') as file:
+            with open(f"territory{territory_id}.txt", 'w+') as file:
                 for i in buildings_data:
                     file.write(str(i.dict()))
                     file.write('\n')
@@ -247,14 +255,39 @@ class TerritoriesService:
         """
 
         # example
-        coeffs = SurvivabilityCoefficients(
-            [1 / (i * 0.1) for i in range(1, 100)], [1 / (i * 0.1) for i in range(1, 100)]
-        )
+        men = []
+        women = []
+        for age in range(0,100):
+            if age == 0:
+                # Младенческая смертность (выше, чем у детей)
+                coeff = 0.985
+            elif 1 <= age < 5:
+                # Детская смертность (резко снижается)
+                coeff = 0.992
+            elif 5 <= age < 15:
+                # Минимальная смертность в детском возрасте
+                coeff = 0.998
+            elif 15 <= age < 25:
+                # Небольшой рост из-за рискованного поведения
+                coeff = 0.995 - 0.001 * (age - 15)
+            elif 25 <= age < 60:
+                # Постепенный рост смертности с возрастом
+                coeff = 0.993 - 0.002 * (age - 25)
+            else:
+                # Экспоненциальный рост смертности в пожилом возрасте
+                coeff = max(0.0, 0.85 - 0.03 * math.exp((age - 60) / 10))
+
+            men.append(round(coeff, 4))
+            women.append(round(coeff, 4))
+        coeffs = SurvivabilityCoefficients(men, women)
 
         fertility.adapt_to_scenario(scenario)
 
         if from_scratch:
-            await self.divide(territory_id, start_date=date(year_begin,1,1))
+            await self.divide(
+                territory_id, 
+                start_date=date(year_begin,1,1)
+            )
 
         prforecast(
             houses_db=self.divide_working_db_path,
@@ -266,6 +299,7 @@ class TerritoriesService:
             fertility_coefficient=fertility.fertility_coefficient,
             fertility_begin=fertility.fertility_begin,
             fertility_end=fertility.fertility_end,
+            scenario=scenario,
             verbose=self.debug,
             working_dir=self.forecast_working_dir_path,
         )
@@ -274,5 +308,6 @@ class TerritoriesService:
             input_dir=self.forecast_working_dir_path,
             territory_id=territory_id,
             year_begin=year_begin,
-            years=years
+            years=years,
+            scenario=scenario,
         )

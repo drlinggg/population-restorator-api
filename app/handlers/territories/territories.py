@@ -59,7 +59,7 @@ async def balance(
 
     territories_service = request.app.state.territories_service
 
-    job = request.app.state.queue.enqueue(territories_service.balance, args=(territory_id, start_date,))#, job_timeout=500"
+    job = request.app.state.queue.enqueue(territories_service.balance, args=(territory_id, start_date,), job_timeout=9000)
     return JobCreatedResponse(job_id=job.id, status="Queued")
 
 
@@ -91,7 +91,7 @@ async def divide(
 
     prev_job = request.app.state.queue.fetch_job(from_previous) if from_previous else None
     if from_previous is None:
-        job = request.app.state.queue.enqueue(territories_service.divide, territory_id, start_date=start_date)
+        job = request.app.state.queue.enqueue(territories_service.divide, territory_id, start_date=start_date, job_timeout=9000)
     elif prev_job and prev_job.is_finished:
         job = request.app.state.queue.enqueue(territories_service.divide, territory_id, houses_df=prev_job.return_value()[1])
     elif prev_job and not prev_job.is_finished:
@@ -139,7 +139,7 @@ async def restore(
         "from_scratch": from_scratch,
     }
 
-    job = request.app.state.queue.enqueue(territories_service.restore, kwargs=restore_args)
+    job = request.app.state.queue.enqueue(territories_service.restore, kwargs=restore_args, job_timeout=9000)
 
     return JobCreatedResponse(job_id=job.id, status="Queued")
 
