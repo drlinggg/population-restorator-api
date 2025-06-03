@@ -32,6 +32,7 @@ from app.http_clients import (
     UrbanClient,
     SavingClient,
 )
+from app.utils.config import PopulationRestoratorConfig
 
 
 class TerritoriesService:
@@ -46,17 +47,15 @@ class TerritoriesService:
         urban_client: UrbanClient,
         socdemo_client: SocDemoClient,
         saving_client: SavingClient,
+        population_restorator_config: PopulationRestoratorConfig,
         debug: bool,
-        forecast_working_dir_path: str,
-        divide_working_db_path: str,
     ):
 
         self.urban_client = urban_client
         self.socdemo_client = socdemo_client
         self.saving_client = saving_client
+        self.population_restorator_config = population_restorator_config
         self.debug = debug
-        self.forecast_working_dir_path = forecast_working_dir_path
-        self.divide_working_db_path = divide_working_db_path
 
     async def balance(self, territory_id: int, start_date: date | None = None) -> tuple[pd.DataFrame, pd.DataFrame]:
         """
@@ -124,27 +123,11 @@ class TerritoriesService:
         year = start_date.year if start_date is not None else None
 
         oktmo_code: int = await self.urban_client.get_oktmo_of_territory_by_urban_db_id(territory_id)
-        men, women, indexes = await self.socdemo_client.get_population_pyramid(territory_id, oktmo_code, year)
-
-        men_prob = [x / sum(men) for x in men]
-        women_prob = [x / sum(women) for x in women]
-
-        # todo add working indexes and solve 70-74 problem
-        """
-        [70-74] = 530 not single year population info
-
-        70 71 72 73 74
-        0.65x  0.6x 0.5x  0.4x  0.3x
-        get survivability_coefficients
+        population_pyramid = await self.socdemo_client.get_population_pyramid(territory_id, oktmo_code, year)
 
 
-        2.35x = 530
-        x = 225
-        70   71  72 73 74
-        146 135 112 90 67 = 530
-        evaluate
-        the problem is that you dont have surv_coeff in divide
-        """
+        men_prob = [x / sum(population_pyramid.men) for x in population_pyramid.men]
+        women_prob = [x / sum(population_pyramid.women) for x in population_pyramid.women]
         primary = [SocialGroupWithProbability.from_values("people_pyramid", 1, men_prob, women_prob)]
         distribution = SocialGroupsDistribution(primary, [])
 
@@ -153,7 +136,7 @@ class TerritoriesService:
             houses_df=houses_df,
             distribution=distribution,
             year=year,
-            working_db_path=self.divide_working_db_path,
+            working_db_path=self.population_restorator_config.working_dirs.divide_working_db_path,
             verbose=self.debug,
         )
 
@@ -227,11 +210,8 @@ class TerritoriesService:
     async def restore(
         self,
         territory_id: int,
-        survivability_coefficients: dict[str, tuple[float]],
         year_begin: int,
         years: int,
-        boys_to_girls: float,
-        fertility: FertilityPerWoman,
         scenario: tp.Literal["NEGATIVE", "NEUTRAL", "POSIVITE"],
         from_scratch: bool,
     ) -> tp.NoReturn:
@@ -241,71 +221,43 @@ class TerritoriesService:
         This method is used for forecasting N years population for given territory
         Args:
             territory_id: int, id of the territory which is going to be forecasted
-            survivability_coefficients: dict[str, tuple[float]], used to predict population changing through years
-                dict['men'] = (0.99, 0.99, 0.98, 0.95, 0.97, ...)
-                dict['women'] = (0.99, 0.99, 0.98, 0.95, 0.97, ...)
-                tuple[x] is change to survive for x years old male/female
             year_begin: int, divided data for this year is used to start forecasting
             years: int, amount of years to be forecasted
                 if year_begin is 2025 and years is 2, forecasting for 2026 and 2027
-            fertility:
-                fertility_coefficient: float, births per woman each year value
-                fertility_begin & fertility_end: int, age of beginning and stopping to giving birth
+            scenario: Literal, affects the birthrate stats
             from_scratch: bool, if true dividing first, otherwise using dividing data from divide output db
         """
 
-        # example
-        men = []
-        women = []
-        for age in range(0,100):
-            if age == 0:
-                # Младенческая смертность (выше, чем у детей)
-                coeff = 0.985
-            elif 1 <= age < 5:
-                # Детская смертность (резко снижается)
-                coeff = 0.992
-            elif 5 <= age < 15:
-                # Минимальная смертность в детском возрасте
-                coeff = 0.998
-            elif 15 <= age < 25:
-                # Небольшой рост из-за рискованного поведения
-                coeff = 0.995 - 0.001 * (age - 15)
-            elif 25 <= age < 60:
-                # Постепенный рост смертности с возрастом
-                coeff = 0.993 - 0.002 * (age - 25)
-            else:
-                # Экспоненциальный рост смертности в пожилом возрасте
-                coeff = max(0.0, 0.85 - 0.03 * math.exp((age - 60) / 10))
+        oktmo_code = await self.urban_client.get_oktmo_of_territory_by_urban_db_id(territory_id)
+        coeffs = await self.socdemo_client.get_surviability_coeffs_from_last_pyramids(territory_id, oktmo_code, year_begin)
 
-            men.append(round(coeff, 4))
-            women.append(round(coeff, 4))
-        coeffs = SurvivabilityCoefficients(men, women)
-
+        fertility = FertilityPerWoman(**self.population_restorator_config.fertility.model_dump())
         fertility.adapt_to_scenario(scenario)
 
         if from_scratch:
+            #todo add check & reforecast
             await self.divide(
-                territory_id, 
+                territory_id,
                 start_date=date(year_begin,1,1)
             )
 
         prforecast(
-            houses_db=self.divide_working_db_path,
+            houses_db=self.population_restorator_config.working_dirs.divide_working_db_path,
             territory_id=territory_id,
-            coeffs=coeffs,  # should be replaced to survivability_coefficients
+            coeffs=coeffs,
             year_begin=year_begin,
             years=years,
-            boys_to_girls=boys_to_girls,
+            boys_to_girls=self.population_restorator_config.boys_to_girls,
             fertility_coefficient=fertility.fertility_coefficient,
             fertility_begin=fertility.fertility_begin,
             fertility_end=fertility.fertility_end,
             scenario=scenario,
             verbose=self.debug,
-            working_dir=self.forecast_working_dir_path,
+            working_dir=self.population_restorator_config.working_dirs.forecast_working_dir_path,
         )
 
         await self.insert_forecasted_data(
-            input_dir=self.forecast_working_dir_path,
+            input_dir=self.population_restorator_config.working_dirs.forecast_working_dir_path,
             territory_id=territory_id,
             year_begin=year_begin,
             years=years,

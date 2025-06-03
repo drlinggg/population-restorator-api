@@ -53,11 +53,6 @@ class JobNotFoundErrorResponse(BaseModel):
     detail: str = "job not found"
 
 
-class SurvivabilityCoefficients(BaseModel):
-    men: tuple
-    women: tuple
-
-
 class UrbanSocialDistributionPost(BaseModel):
     building_id: int
     scenario: Literal["NEGATIVE", "NEUTRAL", "POSITIVE"]

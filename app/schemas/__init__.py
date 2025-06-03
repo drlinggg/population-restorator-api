@@ -10,7 +10,6 @@ from .territories import (
     JobErrorResponse,
     JobNotFoundErrorResponse,
     JobResponse,
-    SurvivabilityCoefficients,
     TerritoryResponse,
     TimeoutErrorResponse,
     UrbanSocialDistributionPost,

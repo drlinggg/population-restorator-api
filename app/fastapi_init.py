@@ -61,8 +61,7 @@ async def lifespan(app: FastAPI):
         socdemo_client=SocDemoClient(app_config.socdemo_api),
         saving_client=SavingClient(app_config.saving_api),
         debug=app_config.app.debug,
-        forecast_working_dir_path=app_config.working_dir.forecast_working_dir_path,
-        divide_working_db_path=app_config.working_dir.divide_working_db_path,
+        population_restorator_config=app_config.population_restorator
     )
 
     # todo add manage amount of workers

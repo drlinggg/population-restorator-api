@@ -10,7 +10,10 @@ from typing import Any, TextIO
 
 import yaml
 
+from app.models import FertilityPerWoman
+
 from .logging import LoggingLevel
+
 
 
 @dataclass
@@ -77,11 +80,17 @@ class LoggingConfig:
         if len(self.files) > 0 and isinstance(self.files[0], dict):
             self.files = [FileLogger(**f) for f in self.files]
 
+@dataclass
+class PopulationRestoratorConfig:
+    working_dirs: WorkingDirConfig
+    fertility: FertilityPerWoman
+    boys_to_girls: float
+
 
 @dataclass
 class PopulationRestoratorApiConfig:
     app: AppConfig
-    working_dir: WorkingDirConfig
+    population_restorator: PopulationRestoratorConfig
     redis_queue: RedisQueueConfig
     logging: LoggingConfig
     urban_api: ApiConfig
@@ -105,7 +114,6 @@ class PopulationRestoratorApiConfig:
         return OrderedDict(
             [
                 ("app", to_ordered_dict_recursive(self.app)),
-                ("working_dir", to_ordered_dict_recursive(self.working_dir)),
                 ("redis_queue", to_ordered_dict_recursive(self.redis_queue)),
                 ("logging", to_ordered_dict_recursive(self.logging)),
                 ("urban_api", to_ordered_dict_recursive(self.urban_api)),
@@ -143,9 +151,13 @@ class PopulationRestoratorApiConfig:
 
         return cls(
             app=AppConfig(host="0.0.0.0", port=8000, debug=True, name="population-restorator-api"),
-            working_dir=WorkingDirConfig(
-                divide_working_db_path="/home/banakh/work/population-restorator-api/population-restorator/test.db",
-                forecast_working_dir_path="/home/banakh/calculation_dbs/",
+            population_restorator = PopulationRestoratorConfig(
+                working_dirs=WorkingDirConfig(
+                    divide_working_db_path="/home/banakh/work/population-restorator-api/population-restorator/test.db",
+                    forecast_working_dir_path="/home/banakh/calculation_dbs/",
+                ),
+                fertility = FertilityPerWoman(),
+                boys_to_girls=1.1
             ),
             redis_queue=RedisQueueConfig(host="localhost", port="6379", db=0, queue_name="default"),
             logging=LoggingConfig(level="INFO"),
@@ -174,9 +186,18 @@ class PopulationRestoratorApiConfig:
             else:
                 data = yaml.safe_load(file)
 
+            population_restorator = data.get("population_restorator", {})
             return cls(
                 app=AppConfig(**data.get("app", {})),
-                working_dir=WorkingDirConfig(**data.get("working_dirs", {})),
+                population_restorator=PopulationRestoratorConfig(
+                    working_dirs=WorkingDirConfig(
+                        **population_restorator["working_dirs"]
+                    ),
+                    fertility=FertilityPerWoman(
+                        **population_restorator["fertility"],
+                    ),
+                    boys_to_girls=population_restorator["boys_to_girls"]
+                ),
                 redis_queue=RedisQueueConfig(**data.get("redis_queue", {})),
                 logging=LoggingConfig(**data.get("logging", {})),
                 urban_api=ApiConfig(**data.get("urban_api", {})),

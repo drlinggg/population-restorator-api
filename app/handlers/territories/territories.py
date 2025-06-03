@@ -23,11 +23,9 @@ from app.schemas import (
     JobErrorResponse,
     JobNotFoundErrorResponse,
     JobResponse,
-    SurvivabilityCoefficients,
     TerritoryResponse,
     TimeoutErrorResponse,
 )
-from app.models import FertilityPerWoman
 from app.utils import JobError
 
 from .routers import territories_router
@@ -115,26 +113,18 @@ async def divide(
 async def restore(
     request: Request,
     territory_id: int,
-    survivability_coefficients: SurvivabilityCoefficients,
-    year_begin: int = Query(...),  # todo сделать чтобы это  
+    year_begin: int = Query(...),
     year_end: int = Query(...),
-    boys_to_girls: float = Query(...),
     scenario: Literal["NEGATIVE", "NEUTRAL", "POSIVITE"] = "NEUTRAL",
     from_scratch: bool = Query(True, description="recalculate previous steps before restoring"),
-    #start_date
 ):
     # todo desc
     territories_service = request.app.state.territories_service
 
-    fertility = FertilityPerWoman()
-
     restore_args = {
         "territory_id": territory_id,
-        "survivability_coefficients": survivability_coefficients,
         "year_begin": year_begin,
         "years": year_end - year_begin,
-        "boys_to_girls": boys_to_girls,
-        "fertility": fertility,
         "scenario": scenario,
         "from_scratch": from_scratch,
     }
