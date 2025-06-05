@@ -1,2 +1,2 @@
-from .demographics import FertilityPerWoman, SurvivabilityCoefficients, PopulationPyramid
+from .demographics import BirthStats, SurvivabilityCoefficients, PopulationPyramid, FertilityInterval
 from .urban_social_distribution import UrbanSocialDistribution

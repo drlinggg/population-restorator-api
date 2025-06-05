@@ -6,9 +6,7 @@ app:
 population_restorator:
   fertility:
     fertility_begin: 18
-    fertility_end: 40
-    fertility_coefficient: 0.9
-  boys_to_girls: 1.03
+    fertility_end: 45
   working_dirs:
     divide_working_db_path: "/home/banakh/work/population-restorator-api/population-restorator/test.db"
     forecast_working_dir_path: "/home/banakh/calculation_dbs/"
@@ -19,6 +17,8 @@ logging:
       level: "INFO"
     - filename: "logs/testerror.log"
       level: "ERROR"
+    - filename: "logs/debug.log"
+      level: "DEBUG"
 redis_queue:
   host: "localhost"
   port: 6379
@@ -42,5 +42,3 @@ saving_api:
   host: "http://10.32.1.58:8000"
   port: 443
   api_key: null
-
-

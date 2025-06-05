@@ -35,9 +35,10 @@ class SavingClient(BaseClient):
         houses_data: list[UrbanSocialDistribution]
     ):
         """
-        Args: houses_data
-
-        Returns: None
+        Args:
+            houses_data
+        Returns:
+            None
         """
 
         houses_data = [UrbanSocialDistributionPost.from_model(house)

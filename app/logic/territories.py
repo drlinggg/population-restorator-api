@@ -20,7 +20,7 @@ from population_restorator.models import (
 )
 from app.schemas import UrbanSocialDistributionPost
 from app.http_clients.common.exceptions import ObjectNotFoundError
-from app.models import UrbanSocialDistribution, FertilityPerWoman
+from app.models import UrbanSocialDistribution, FertilityInterval
 
 # torename
 from population_restorator.scenarios import balance as prbalance
@@ -116,7 +116,7 @@ class TerritoriesService:
         """
         if houses_df is None:
             test_results = (await self.balance(territory_id=territory_id, start_date=start_date))
-            #test_results[0].to_csv(f"./territories{territory_id}.csv") #toberemoved
+            #test_results[0].to_csv(f"./territories{territory_id}.csv")
             #test_results[1].to_csv(f"./houses{territory_id}.csv")
             houses_df = test_results[1]
 
@@ -202,7 +202,7 @@ class TerritoriesService:
                 )
             cur_year += 1
             #await self.saving_client.post_forecasted_data(buildings_data)
-            with open(f"territory{territory_id}.txt", 'w+') as file:
+            with open(f"testres/territory{territory_id}_{cur_year}.txt", 'w+') as file:
                 for i in buildings_data:
                     file.write(str(i.dict()))
                     file.write('\n')
@@ -231,8 +231,14 @@ class TerritoriesService:
         oktmo_code = await self.urban_client.get_oktmo_of_territory_by_urban_db_id(territory_id)
         coeffs = await self.socdemo_client.get_surviability_coeffs_from_last_pyramids(territory_id, oktmo_code, year_begin)
 
-        fertility = FertilityPerWoman(**self.population_restorator_config.fertility.model_dump())
-        fertility.adapt_to_scenario(scenario)
+        fertility_interval = FertilityInterval(**self.population_restorator_config.fertility_interval.model_dump())
+        birth_stats = await self.socdemo_client.get_birth_stats(
+            territory_id,
+            fertility_interval,
+            oktmo_code=oktmo_code,
+            year=year_begin
+        )
+        birth_stats.adapt_to_scenario(scenario)
 
         if from_scratch:
             #todo add check & reforecast
@@ -247,10 +253,10 @@ class TerritoriesService:
             coeffs=coeffs,
             year_begin=year_begin,
             years=years,
-            boys_to_girls=self.population_restorator_config.boys_to_girls,
-            fertility_coefficient=fertility.fertility_coefficient,
-            fertility_begin=fertility.fertility_begin,
-            fertility_end=fertility.fertility_end,
+            boys_to_girls=birth_stats.boys_to_girls,
+            fertility_coefficient=birth_stats.fertility_coefficient,
+            fertility_begin=birth_stats.fertility_interval.start,
+            fertility_end=birth_stats.fertility_interval.end,
             scenario=scenario,
             verbose=self.debug,
             working_dir=self.population_restorator_config.working_dirs.forecast_working_dir_path,

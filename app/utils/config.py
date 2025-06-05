@@ -10,10 +10,9 @@ from typing import Any, TextIO
 
 import yaml
 
-from app.models import FertilityPerWoman
+from app.models import FertilityInterval
 
 from .logging import LoggingLevel
-
 
 
 @dataclass
@@ -83,8 +82,7 @@ class LoggingConfig:
 @dataclass
 class PopulationRestoratorConfig:
     working_dirs: WorkingDirConfig
-    fertility: FertilityPerWoman
-    boys_to_girls: float
+    fertility_interval: FertilityInterval
 
 
 @dataclass
@@ -153,11 +151,10 @@ class PopulationRestoratorApiConfig:
             app=AppConfig(host="0.0.0.0", port=8000, debug=True, name="population-restorator-api"),
             population_restorator = PopulationRestoratorConfig(
                 working_dirs=WorkingDirConfig(
-                    divide_working_db_path="/home/banakh/work/population-restorator-api/population-restorator/test.db",
-                    forecast_working_dir_path="/home/banakh/calculation_dbs/",
+                    divide_working_db_path="./test.db",
+                    forecast_working_dir_path="./calculation_dbs/",
                 ),
-                fertility = FertilityPerWoman(),
-                boys_to_girls=1.1
+                fertility_interval = FertilityInterval(start=18,end=40),
             ),
             redis_queue=RedisQueueConfig(host="localhost", port="6379", db=0, queue_name="default"),
             logging=LoggingConfig(level="INFO"),
@@ -193,10 +190,9 @@ class PopulationRestoratorApiConfig:
                     working_dirs=WorkingDirConfig(
                         **population_restorator["working_dirs"]
                     ),
-                    fertility=FertilityPerWoman(
+                    fertility_interval=FertilityInterval(
                         **population_restorator["fertility"],
                     ),
-                    boys_to_girls=population_restorator["boys_to_girls"]
                 ),
                 redis_queue=RedisQueueConfig(**data.get("redis_queue", {})),
                 logging=LoggingConfig(**data.get("logging", {})),
