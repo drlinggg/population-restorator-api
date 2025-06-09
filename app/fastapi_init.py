@@ -16,12 +16,12 @@ from app.utils import PopulationRestoratorApiConfig, configure_logging, start_re
 
 
 def get_app(prefix: str = "/api") -> FastAPI:
-    desc = "todo"
+    desc = "population-restorator-api, uses population-restorator module to forecast population for territories"
 
     app = FastAPI(
         title="Population-restorator-api",
         description=desc,
-        version="0.0.1",
+        version="1.0.0 red fox",
         contact={"name": "Banakh Andrei", "email": "uuetsukeu@mail.ru"},
         license_info={"name": "MIT"},
         lifespan=lifespan,

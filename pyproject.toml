@@ -1,6 +1,6 @@
 [project]
 name = "population-restorator-api"
-version = "0.0.1"
+version = "1.0.0"
 description = "todo"
 authors = [
     {name = "Banakh Andrei",email = "uuetsukeu@mail.ru"}
@@ -28,8 +28,13 @@ dependencies = [
     "population-restorator"
 ]
 
+
 [tool.poetry.dependencies]
-population-restorator = { path = "./population-restorator", develop = true }
+population-restorator = { git = "https://github.com/drlinggg/population-restorator.git" }
+
+#dev
+#[tool.poetry.dependencies]
+#population-restorator = { path = "./population-restorator", develop = true }
 
 [tool.poetry]
 packages = [{ include = "app" }]

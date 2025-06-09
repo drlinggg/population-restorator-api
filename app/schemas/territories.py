@@ -64,3 +64,21 @@ class UrbanSocialDistributionPost(BaseModel):
     @classmethod
     def from_model(cls, model: UrbanSocialDistribution):
         return UrbanSocialDistributionPost(**model.model_dump())
+
+
+class UrbanSocialDistributionDelete(BaseModel):
+    building_id: int
+    scenario: Literal["NEGATIVE", "NEUTRAL", "POSITIVE"]
+    year: int
+    sex: Literal["MALE", "FEMALE"]
+    age: int
+
+    @classmethod
+    def from_model(cls, model: UrbanSocialDistribution):
+        return UrbanSocialDistributionDelete(
+            building_id=model.building_id,
+            scenario=model.scenario,
+            age=model.age,
+            sex=model.sex,
+            year=model.year,
+        )

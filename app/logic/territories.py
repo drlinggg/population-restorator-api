@@ -30,7 +30,6 @@ from app.http_clients import (
 )
 from app.http_clients.common.exceptions import ObjectNotFoundError
 from app.models import FertilityInterval, UrbanSocialDistribution
-from app.schemas import UrbanSocialDistributionPost
 from app.utils.config import PopulationRestoratorConfig
 
 
@@ -168,14 +167,14 @@ class TerritoriesService:
         buildings_data: dict[str, list[UrbanSocialDistribution]] = {}
 
         for db_path in db_paths:
-            logger.info(f"trying to get db data, {db_path}")
+            logger.info(f"trying to get db data, db_path: {{{db_path}}}")
             if not (Path(db_path).exists()):
                 logger.info(f"no such db {db_path}")
                 continue
             year_data = export_year_age_values(db_path=db_path, territory_id=territory_id, verbose=self.debug)
 
             if year_data is None:
-                logger.error(f"got no data from {db_path}")
+                logger.error(f"got no data from, db_path: {{{db_path}}}")
                 raise ObjectNotFoundError()
 
             buildings_year_data: list[UrbanSocialDistribution] = []
@@ -228,7 +227,7 @@ class TerritoriesService:
 
         logger = structlog.getLogger()
         for db_path, values in buildings_data.items():
-            logger.info(f"deleting previous forecasted data {db_path}")
+            logger.info(f"deleting previous forecasted data, db_path: {{ {db_path} }}")
             await self.saving_client.delete_forecasted_data(values)
 
             try:
@@ -257,8 +256,10 @@ class TerritoriesService:
 
         buildings_data = await self.get_forecasted_data(input_dir, territory_id, year_begin, years, scenario)
 
+        logger = structlog.getLogger()
         for db_path, values in buildings_data.items():
-            # logger
+            logger.info(f"saving forecasted data, db_path: {{ {db_path} }}")
+
             await self.saving_client.post_forecasted_data(values)
 
     async def restore(

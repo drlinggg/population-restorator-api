@@ -1140,8 +1140,10 @@ sqlalchemy = "^2.0.20"
 tqdm = "^4.65.0"
 
 [package.source]
-type = "directory"
-url = "population-restorator"
+type = "git"
+url = "https://github.com/drlinggg/population-restorator.git"
+reference = "HEAD"
+resolved_reference = "b9109866a367c1c297d471172739d64e43831aef"
 
 [[package]]
 name = "propcache"
@@ -2063,4 +2065,4 @@ propcache = ">=0.2.1"
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.9"
-content-hash = "c340fe59e0efbb4793a07be8537ca3277899e4cb65ae0916c096accf2b577c70"
+content-hash = "fe8cd066020ad26ad16129ac0f1ca14bfaf8fd42a084badcc504228f42b83c0a"

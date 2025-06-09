@@ -17,7 +17,7 @@ from app.http_clients.common import (
     handle_post_request,
 )
 from app.models import UrbanSocialDistribution
-from app.schemas import UrbanSocialDistributionPost
+from app.schemas import UrbanSocialDistributionPost, UrbanSocialDistributionDelete
 
 
 logger = structlog.getLogger()
@@ -36,13 +36,6 @@ class SavingClient(BaseClient):
 
     @handle_exceptions
     async def post_forecasted_data(self, houses_data: list[UrbanSocialDistribution]):
-        """
-        Args:
-            houses_data
-        Returns:
-            None
-        """
-
         houses_data = [UrbanSocialDistributionPost.from_model(house).dict() for house in houses_data]
 
         url = f"{self.config.host}/api/v1/distribution/create-many"
@@ -57,27 +50,16 @@ class SavingClient(BaseClient):
         self,
         houses_data: list[UrbanSocialDistribution],
     ):
-        """
-        Args:
-            houses_data
-        Returns:
-            None
-        """
-
-        houses_data = [UrbanSocialDistributionPost.from_model(house) for house in houses_data]
-
+        houses_data = [UrbanSocialDistributionDelete.from_model(house) for house in houses_data]
         base_url = f"{self.config.host}/api/v1/distribution/"
         session = aiohttp.ClientSession()
-
-        semaphore = Semaphore(5)
-
-        async def fetch_with_semaphore(url: str, params: dict):
+        semaphore = Semaphore(30)
+        async def fetch_with_semaphore(url: str, params: dict, session):
             async with semaphore:
                 return await handle_delete_request(url=url, params=params, session=session)
 
         tasks = [
-            fetch_with_semaphore(url=base_url + str(house.building_id), params=house.dict()) for house in houses_data
+            fetch_with_semaphore(url=base_url + str(house.building_id), params=house.dict(), session=session) for house in houses_data
         ]
         await gather(*tasks)
-
         await session.close()

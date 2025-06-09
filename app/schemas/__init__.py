@@ -13,4 +13,5 @@ from .territories import (
     TerritoryResponse,
     TimeoutErrorResponse,
     UrbanSocialDistributionPost,
+    UrbanSocialDistributionDelete,
 )

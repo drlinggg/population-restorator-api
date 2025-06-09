@@ -12,7 +12,7 @@ import structlog
 from .exceptions import InvalidStatusCode
 
 
-async def handle_request(
+async def _handle_request(
     method: str,
     url: str,
     params: dict[str, Any] | None = None,
@@ -21,7 +21,7 @@ async def handle_request(
     json: dict | None = None,
 ) -> dict | None:
     """
-    Обрабатывает HTTP запросы (GET, POST, DELETE) и возвращает ответ
+    handles HTTP requests (GET, POST, DELETE) and returns response
     """
     params = params or {}
     headers = headers or {}
@@ -51,7 +51,7 @@ async def handle_request(
 
             response_text = await response.text()
             logger.error(f"Error on {method}: {{status: {response.status}, " f"response_text: {response_text}}}")
-            raise InvalidStatusCode(f"Unexpected status code on {url}: {response.status}")
+            #raise InvalidStatusCode(f"Unexpected status code on {url}: {response.status}")
     finally:
         if new_session and session:
             await session.close()
@@ -63,7 +63,7 @@ async def handle_get_request(
     headers: dict[str, Any] | None = None,
     session: aiohttp.ClientSession | None = None,
 ) -> dict | None:
-    return await handle_request("GET", url, params, headers, session=session)
+    return await _handle_request("GET", url, params, headers, session=session)
 
 
 async def handle_post_request(
@@ -73,7 +73,7 @@ async def handle_post_request(
     headers: dict[str, Any] | None = None,
     session: aiohttp.ClientSession | None = None,
 ) -> dict | None:
-    return await handle_request("POST", url, params, headers, session, json)
+    return await _handle_request("POST", url, params, headers, session, json)
 
 
 async def handle_delete_request(
@@ -82,4 +82,4 @@ async def handle_delete_request(
     headers: dict[str, Any] | None = None,
     session: aiohttp.ClientSession | None = None,
 ) -> dict | None:
-    return await handle_request("DELETE", url, params, headers, session=session)
+        return await _handle_request("DELETE", url, params, headers, session=session)
