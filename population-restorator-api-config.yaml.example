@@ -5,17 +5,17 @@ app:
   name: "population-restorator-api"
 population_restorator:
   fertility:
-    fertility_begin: 18
-    fertility_end: 45
+    start: 18
+    end: 45
   working_dirs:
-    divide_working_db_path: "/home/banakh/work/population-restorator-api/population-restorator/test.db"
-    forecast_working_dir_path: "/home/banakh/calculation_dbs/"
+    divide_working_db_path: "./test.db"
+    forecast_working_dir_path: "./calculation_dbs/"
 logging:
   level: "INFO"
   files:
-    - filename: "logs/testinfo.log"
+    - filename: "logs/info.log"
       level: "INFO"
-    - filename: "logs/testerror.log"
+    - filename: "logs/error.log"
       level: "ERROR"
     - filename: "logs/debug.log"
       level: "DEBUG"

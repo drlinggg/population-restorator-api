@@ -79,6 +79,7 @@ class LoggingConfig:
         if len(self.files) > 0 and isinstance(self.files[0], dict):
             self.files = [FileLogger(**f) for f in self.files]
 
+
 @dataclass
 class PopulationRestoratorConfig:
     working_dirs: WorkingDirConfig
@@ -149,12 +150,12 @@ class PopulationRestoratorApiConfig:
 
         return cls(
             app=AppConfig(host="0.0.0.0", port=8000, debug=True, name="population-restorator-api"),
-            population_restorator = PopulationRestoratorConfig(
+            population_restorator=PopulationRestoratorConfig(
                 working_dirs=WorkingDirConfig(
                     divide_working_db_path="./test.db",
                     forecast_working_dir_path="./calculation_dbs/",
                 ),
-                fertility_interval = FertilityInterval(start=18,end=40),
+                fertility_interval=FertilityInterval(start=18, end=40),
             ),
             redis_queue=RedisQueueConfig(host="localhost", port="6379", db=0, queue_name="default"),
             logging=LoggingConfig(level="INFO"),
@@ -164,12 +165,8 @@ class PopulationRestoratorApiConfig:
                 api_key="todo",
                 const_request_params={"some_path_param": 4},
             ),
-            socdemo_api=ApiConfig(
-                host="todo", port=443, api_key=None, const_request_params={"another_param": "test"}
-            ),
-            saving_api=ApiConfig(
-                host="todo", port=443, api_key=None
-            )
+            socdemo_api=ApiConfig(host="todo", port=443, api_key=None, const_request_params={"another_param": "test"}),
+            saving_api=ApiConfig(host="todo", port=443, api_key=None),
         )
 
     @classmethod
@@ -187,9 +184,7 @@ class PopulationRestoratorApiConfig:
             return cls(
                 app=AppConfig(**data.get("app", {})),
                 population_restorator=PopulationRestoratorConfig(
-                    working_dirs=WorkingDirConfig(
-                        **population_restorator["working_dirs"]
-                    ),
+                    working_dirs=WorkingDirConfig(**population_restorator["working_dirs"]),
                     fertility_interval=FertilityInterval(
                         **population_restorator["fertility"],
                     ),
@@ -198,7 +193,7 @@ class PopulationRestoratorApiConfig:
                 logging=LoggingConfig(**data.get("logging", {})),
                 urban_api=ApiConfig(**data.get("urban_api", {})),
                 socdemo_api=ApiConfig(**data.get("socdemo_api", {})),
-                saving_api=ApiConfig(**data.get("saving_api", {}))
+                saving_api=ApiConfig(**data.get("saving_api", {})),
             )
         except Exception as exc:
             raise ValueError(f"Could not read app config file: {file}") from exc

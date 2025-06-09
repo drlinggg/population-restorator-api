@@ -1,24 +1,20 @@
-from pydantic import (
-    BaseModel,
-    Field,
-    ValidationError,
-    validator,
-    model_validator
-)
 from typing import Literal, Tuple
+
+from pydantic import BaseModel, Field, ValidationError, model_validator, validator
+
 
 class FertilityInterval(BaseModel):
     start: int = Field(gt=0)
     end: int = Field(gt=0)
 
-    @model_validator(mode='after')
+    @model_validator(mode="after")
     def check_interval(self):
         if self.start > self.end:
             raise ValueError(
-                f"Fertility beginning shouldn't be bigger than ending, "
-                f"got {self.start} and {self.end} instead"
+                f"Fertility beginning shouldn't be bigger than ending, " f"got {self.start} and {self.end} instead"
             )
         return self
+
 
 class BirthStats(BaseModel):
     """
@@ -44,14 +40,15 @@ class BirthStats(BaseModel):
 
 class SurvivabilityCoefficients(BaseModel):
     "This model is used to recreate next year population for all ages by multiplication it by men[age]/women[age]"
+
     men: Tuple[float, ...]
     women: Tuple[float, ...]
     year: int = Field(ge=1900)
 
-    @validator('men', 'women', each_item=True)
+    @validator("men", "women", each_item=True)
     def check_non_negative(cls, v):
         if v < 0:
-            raise ValueError('Value must be non-negative')
+            raise ValueError("Value must be non-negative")
         return v
 
 
@@ -60,12 +57,13 @@ class PopulationPyramid(BaseModel):
     This model is used in divide function
     and two models with 1 year gap could be used to recreate SurvivabilityCoefficients
     """
+
     men: Tuple[int, ...]
     women: Tuple[int, ...]
     year: int = Field(ge=1900)
 
-    @validator('men', 'women', each_item=True)
+    @validator("men", "women", each_item=True)
     def check_non_negative_int(cls, v):
         if v < 0:
-            raise ValueError('Population value must be non-negative')
+            raise ValueError("Population value must be non-negative")
         return v

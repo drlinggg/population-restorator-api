@@ -2,7 +2,7 @@
 Response models are defined here
 """
 
-from typing import Optional, Literal
+from typing import Literal, Optional
 
 from pydantic import BaseModel, Field
 
@@ -62,5 +62,5 @@ class UrbanSocialDistributionPost(BaseModel):
     value: int
 
     @classmethod
-    def from_model(model: UrbanSocialDistribution):
+    def from_model(cls, model: UrbanSocialDistribution):
         return UrbanSocialDistributionPost(**model.model_dump())

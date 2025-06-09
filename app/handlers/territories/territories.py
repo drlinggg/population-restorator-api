@@ -1,10 +1,11 @@
 """
 FastApi territory & population related handlers are defined here
 """
+
 from __future__ import annotations
 
-from datetime import datetime, timezone, date
-from typing import Union, Literal
+from datetime import date, datetime, timezone
+from typing import Literal, Union
 
 from fastapi import HTTPException, Query, Request, status
 from fastapi.responses import JSONResponse
@@ -57,7 +58,14 @@ async def balance(
 
     territories_service = request.app.state.territories_service
 
-    job = request.app.state.queue.enqueue(territories_service.balance, args=(territory_id, start_date,), job_timeout=9000)
+    job = request.app.state.queue.enqueue(
+        territories_service.balance,
+        args=(
+            territory_id,
+            start_date,
+        ),
+        job_timeout=9000,
+    )
     return JobCreatedResponse(job_id=job.id, status="Queued")
 
 
@@ -74,7 +82,7 @@ async def balance(
 async def divide(
     request: Request,
     territory_id: int,
-    start_date: date = Query(None, description="earliest date information about to be searched for"), # NO TOGETHER
+    start_date: date = Query(None, description="earliest date information about to be searched for"),  # NO TOGETHER
     from_previous: str = Query(None, description="id of balance job which calculations would be used"),
 ):
     # todo desc
@@ -89,9 +97,13 @@ async def divide(
 
     prev_job = request.app.state.queue.fetch_job(from_previous) if from_previous else None
     if from_previous is None:
-        job = request.app.state.queue.enqueue(territories_service.divide, territory_id, start_date=start_date, job_timeout=9000)
+        job = request.app.state.queue.enqueue(
+            territories_service.divide, territory_id, start_date=start_date, job_timeout=9000
+        )
     elif prev_job and prev_job.is_finished:
-        job = request.app.state.queue.enqueue(territories_service.divide, territory_id, houses_df=prev_job.return_value()[1])
+        job = request.app.state.queue.enqueue(
+            territories_service.divide, territory_id, houses_df=prev_job.return_value()[1]
+        )
     elif prev_job and not prev_job.is_finished:
         raise HTTPException(status_code=424, detail=f"Previous job {from_previous} is not finished yet.")
     else:
@@ -149,7 +161,9 @@ async def get_status(request: Request, job_id: str):
     job = request.app.state.queue.fetch_job(job_id)
 
     if job is None:
-        return JSONResponse(content=JobNotFoundErrorResponse(detail="No job with such id").model_dump(), status_code=404)
+        return JSONResponse(
+            content=JobNotFoundErrorResponse(detail="No job with such id").model_dump(), status_code=404
+        )
 
     if job.is_finished:
         return JobResponse(

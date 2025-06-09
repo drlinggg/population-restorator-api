@@ -5,20 +5,20 @@ with information about population, houses & territories
 
 from __future__ import annotations
 
-import os
 import asyncio
+import os
 from asyncio import Semaphore
+from datetime import date
+from typing import Any
 
 import pandas as pd
 import structlog
-from datetime import date
-from typing import Any
 
 from app.http_clients.common import (
     BaseClient,
     ObjectNotFoundError,
     handle_exceptions,
-    handle_request,
+    handle_get_request,
 )
 from app.utils import PopulationRestoratorApiConfig
 
@@ -68,7 +68,7 @@ class UrbanClient(BaseClient):
             "accept": "application/json",
         }
 
-        data = await handle_request(url, params, headers)
+        data = await handle_get_request(url, params, headers)
 
         internal_territories_df = pd.DataFrame(data)
 
@@ -98,16 +98,13 @@ class UrbanClient(BaseClient):
         # getting response
         url = f"{self.config.host}/api/v1/territories/{territory_id}"
 
-        params = {
-            "territories_ids": territory_id,
-            "centers_only": "true"
-        }
+        params = {"territories_ids": territory_id, "centers_only": "true"}
 
         headers = {
             "accept": "application/json",
         }
 
-        data = await handle_request(url, params, headers)
+        data = await handle_get_request(url, params, headers)
 
         if data is None:
             raise ObjectNotFoundError()
@@ -138,16 +135,13 @@ class UrbanClient(BaseClient):
         # getting response
         url = f"{self.config.host}/api/v1/territories/{territory_id}"
 
-        params = {
-            "territories_ids": territory_id,
-            "centers_only": "true"
-        }
+        params = {"territories_ids": territory_id, "centers_only": "true"}
 
         headers = {
             "accept": "application/json",
         }
 
-        data = await handle_request(url, params, headers)
+        data = await handle_get_request(url, params, headers)
 
         if data is None:
             raise ObjectNotFoundError()
@@ -189,7 +183,7 @@ class UrbanClient(BaseClient):
         # getting response
 
         url = f"{self.config.host}/api/v1/territory/indicator_values"
-        #todo add time
+        # todo add time
         params = {
             "parent_id": parent_id,
             "indicator_ids": self.config.const_request_params["population_indicator"],
@@ -201,7 +195,7 @@ class UrbanClient(BaseClient):
             "accept": "application/json",
         }
 
-        data = await handle_request(url, params, headers)
+        data = await handle_get_request(url, params, headers)
 
         if data is None:
             raise ObjectNotFoundError()
@@ -246,10 +240,7 @@ class UrbanClient(BaseClient):
                 return await self.get_population_for_child_territories(parent_id)
 
         # get population of child territories one level below for each parent territory and put it in df
-        tasks = [
-            fetch_with_semaphore(parent_id)
-            for parent_id in parent_ids
-        ]
+        tasks = [fetch_with_semaphore(parent_id) for parent_id in parent_ids]
 
         results = await asyncio.gather(*tasks)
         population_dfs = [df for df in results if df is not None]
@@ -285,14 +276,14 @@ class UrbanClient(BaseClient):
             "include_child_territories": "true",
             "cities_only": "true",
             "physical_object_type_id": self.config.const_request_params["house_type"],
-            "centers_only": "true" #???
+            "centers_only": "true",  # ???
         }
 
         headers = {
             "accept": "application/json",
         }
 
-        data = await handle_request(url, params, headers)
+        data = await handle_get_request(url, params, headers)
 
         if data is None:
             raise ObjectNotFoundError()
@@ -314,7 +305,9 @@ class UrbanClient(BaseClient):
                 logger.error(i)
                 continue
             except TypeError as exc:
-                logger.error(f"something wrong with house properties territory_parent_id: {territory_parent_id} house_id: {i['properties']['territories'][0]['id']}")
+                logger.error(
+                    f"something wrong with house properties territory_parent_id: {territory_parent_id} house_id: {i['properties']['territories'][0]['id']}"
+                )
                 logger.error(exc)
                 logger.error(i)
                 continue
@@ -343,20 +336,20 @@ class UrbanClient(BaseClient):
         params = {
             "territory_id": territory_id,
             "indicator_ids": self.config.const_request_params["population_indicator"],
-            "last_only": 'true' if start_date is None else 'false',
+            "last_only": "true" if start_date is None else "false",
             "value_type": self.config.const_request_params["population_value_type_indicator"],
             "include_child_territories": "false",
             "cities_only": "false",
         }
 
         if start_date is not None:
-            params["start_date"] = str(start_date),
+            params["start_date"] = (str(start_date),)
 
         headers = {
             "accept": "application/json",
         }
 
-        data = await handle_request(url, params, headers)
+        data = await handle_get_request(url, params, headers)
 
         if data is None:
             raise ObjectNotFoundError()
@@ -367,9 +360,15 @@ class UrbanClient(BaseClient):
         indicator_value_saved: dict[str, Any] = None
         start_date = str(start_date)
         for indicator_value in data:
-            if indicator_value["date_value"] >= start_date and indicator_value_saved is None or \
-                (indicator_value["date_value"] >= start_date and indicator_value_saved is None
-                 and indicator_value["date_value"] < indicator_value_saved):
+            if (
+                indicator_value["date_value"] >= start_date
+                and indicator_value_saved is None
+                or (
+                    indicator_value["date_value"] >= start_date
+                    and indicator_value_saved is None
+                    and indicator_value["date_value"] < indicator_value_saved
+                )
+            ):
                 indicator_value_saved = indicator_value
 
         # formatting

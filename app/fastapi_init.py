@@ -6,18 +6,13 @@ import multiprocess as mp
 from fastapi import FastAPI
 
 from app.handlers.routers import routers_list
-from app.http_clients import SocDemoClient, UrbanClient, SavingClient
+from app.http_clients import SavingClient, SocDemoClient, UrbanClient
 from app.logic import TerritoriesService
 from app.middlewares import (
     ExceptionHandlerMiddleware,
     LoggingMiddleware,
 )
-from app.utils import (
-    PopulationRestoratorApiConfig,
-    configure_logging,
-    start_redis_queue,
-    start_rq_worker
-)
+from app.utils import PopulationRestoratorApiConfig, configure_logging, start_redis_queue, start_rq_worker
 
 
 def get_app(prefix: str = "/api") -> FastAPI:
@@ -61,7 +56,7 @@ async def lifespan(app: FastAPI):
         socdemo_client=SocDemoClient(app_config.socdemo_api),
         saving_client=SavingClient(app_config.saving_api),
         debug=app_config.app.debug,
-        population_restorator_config=app_config.population_restorator
+        population_restorator_config=app_config.population_restorator,
     )
 
     # todo add manage amount of workers

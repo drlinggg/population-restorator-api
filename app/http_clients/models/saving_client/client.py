@@ -5,18 +5,23 @@ with information about population, houses & territories
 
 from __future__ import annotations
 
+from asyncio import Semaphore, gather
+
+import aiohttp
 import structlog
 
 from app.http_clients.common import (
     BaseClient,
+    handle_delete_request,
     handle_exceptions,
-    handle_request,
+    handle_post_request,
 )
 from app.models import UrbanSocialDistribution
 from app.schemas import UrbanSocialDistributionPost
 
 
 logger = structlog.getLogger()
+
 
 class SavingClient(BaseClient):
     """Saving API client that uses HTTP/HTTPS as transport."""
@@ -30,9 +35,27 @@ class SavingClient(BaseClient):
         return "SavingClient"
 
     @handle_exceptions
-    async def post_forecasted_data(
+    async def post_forecasted_data(self, houses_data: list[UrbanSocialDistribution]):
+        """
+        Args:
+            houses_data
+        Returns:
+            None
+        """
+
+        houses_data = [UrbanSocialDistributionPost.from_model(house).dict() for house in houses_data]
+
+        url = f"{self.config.host}/api/v1/distribution/create-many"
+        headers = {
+            "accept": "application/json",
+        }
+
+        await handle_post_request(url=url, headers=headers, json={"dtos": houses_data})
+
+    @handle_exceptions
+    async def delete_forecasted_data(
         self,
-        houses_data: list[UrbanSocialDistribution]
+        houses_data: list[UrbanSocialDistribution],
     ):
         """
         Args:
@@ -41,16 +64,20 @@ class SavingClient(BaseClient):
             None
         """
 
-        houses_data = [UrbanSocialDistributionPost.from_model(house)
-                       for house in houses_data]
+        houses_data = [UrbanSocialDistributionPost.from_model(house) for house in houses_data]
 
-        url = f"{self.config.host}api/v1/distribution/create-many"
-        params = {
-            "dtos": houses_data
-        }
-        headers = {
-            "accept": "application/json",
-        }
+        base_url = f"{self.config.host}/api/v1/distribution/"
+        session = aiohttp.ClientSession()
 
-        await handle_request(url=url, params=params, headers=headers)
+        semaphore = Semaphore(5)
 
+        async def fetch_with_semaphore(url: str, params: dict):
+            async with semaphore:
+                return await handle_delete_request(url=url, params=params, session=session)
+
+        tasks = [
+            fetch_with_semaphore(url=base_url + str(house.building_id), params=house.dict()) for house in houses_data
+        ]
+        await gather(*tasks)
+
+        await session.close()

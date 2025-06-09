@@ -1,6 +1,7 @@
 """
 SocDemoClient is defined here for taking territories population pyramids
 """
+
 from __future__ import annotations
 
 import os
@@ -12,9 +13,9 @@ from app.http_clients.common import (
     BaseClient,
     ObjectNotFoundError,
     handle_exceptions,
-    handle_request,
+    handle_get_request,
 )
-from app.models import SurvivabilityCoefficients, PopulationPyramid, BirthStats, FertilityInterval
+from app.models import BirthStats, FertilityInterval, PopulationPyramid, SurvivabilityCoefficients
 from app.utils import PopulationRestoratorApiConfig
 
 
@@ -33,7 +34,9 @@ class SocDemoClient(BaseClient):
         return "SocDemoClient"
 
     @handle_exceptions
-    async def get_population_pyramid(self, territory_id: int, oktmo_code: int | None = None, year: int | None = None) -> PopulationPyramid:
+    async def get_population_pyramid(
+        self, territory_id: int, oktmo_code: int | None = None, year: int | None = None
+    ) -> PopulationPyramid:
         """
         Args:
             territory_id: (int), id of the current territory in urban_api
@@ -59,10 +62,12 @@ class SocDemoClient(BaseClient):
 
         # getting response
         url = f"{self.config.host}/indicators/{indicator_id}/{territory_id}/detailed"
-        data = await handle_request(url, params, headers)
+        data = await handle_get_request(url, params, headers)
 
         if data is None:
-            raise ObjectNotFoundError(f"no population pyramids for territory {territory_id} with oktmo code {oktmo_code}, year {year}")
+            raise ObjectNotFoundError(
+                f"no population pyramids for territory {territory_id} with oktmo code {oktmo_code}, year {year}"
+            )
 
         pyramids = pd.DataFrame(data)
         year = year or max(pyramids["year"])
@@ -75,7 +80,7 @@ class SocDemoClient(BaseClient):
         for item in pyramid["data"]:
             age_start, age_end = (
                 int(item["age_start"]),
-                int(item["age_end"]) if item["age_end"] is not None else item["age_start"]
+                int(item["age_end"]) if item["age_end"] is not None else item["age_start"],
             )
             if age_start >= 100:
                 continue
@@ -85,17 +90,14 @@ class SocDemoClient(BaseClient):
                 men.append(male)
                 women.append(female)
             else:
-                for age in range(age_start, age_end+1):
-                    men.append(int(male/(age_end+1-age_start)))
-                    women.append(int(female/(age_end+1-age_start)))
+                for age in range(age_start, age_end + 1):
+                    men.append(int(male / (age_end + 1 - age_start)))
+                    women.append(int(female / (age_end + 1 - age_start)))
 
         return PopulationPyramid(men=men, women=women, year=year)
 
     async def get_surviability_coeffs_from_last_pyramids(
-        self,
-        territory_id: int,
-        oktmo_code: int | None = None,
-        year: int | None = None
+        self, territory_id: int, oktmo_code: int | None = None, year: int | None = None
     ) -> SurvivabilityCoefficients:
         """
         Args:
@@ -107,15 +109,21 @@ class SocDemoClient(BaseClient):
         """
 
         after_pyramid = await self.get_population_pyramid(territory_id, oktmo_code, year)
-        before_pyramid = await self.get_population_pyramid(territory_id, oktmo_code, after_pyramid.year-1)
+        before_pyramid = await self.get_population_pyramid(territory_id, oktmo_code, after_pyramid.year - 1)
 
-        if not(len(after_pyramid.men) == len(after_pyramid.women) == len(before_pyramid.men) == len(before_pyramid.women) == 100):
+        if not (
+            len(after_pyramid.men)
+            == len(after_pyramid.women)
+            == len(before_pyramid.men)
+            == len(before_pyramid.women)
+            == 100
+        ):
             raise ObjectNotFoundError("some of pyramids have less/more than 100 ages")
 
         changes_men, changes_women = [], []
-        for age in range(1,100):
-            changes_men.append((after_pyramid.men[age] / before_pyramid.men[age-1]))
-            changes_women.append((after_pyramid.women[age] / before_pyramid.women[age-1]))
+        for age in range(1, 100):
+            changes_men.append((after_pyramid.men[age] / before_pyramid.men[age - 1]))
+            changes_women.append((after_pyramid.women[age] / before_pyramid.women[age - 1]))
         changes_women.append(changes_women[-1])
         changes_men.append(changes_men[-1])
         return SurvivabilityCoefficients(men=changes_men, women=changes_women, year=after_pyramid.year)
@@ -139,11 +147,11 @@ class SocDemoClient(BaseClient):
         population_pyramid = await self.get_population_pyramid(territory_id, oktmo_code, year)
 
         births = population_pyramid.men[0] + population_pyramid.women[0]
-        fertil_women = sum(population_pyramid.women[fertility_interval.start:fertility_interval.end+1])
+        fertil_women = sum(population_pyramid.women[fertility_interval.start : fertility_interval.end + 1])
 
         boys_to_girls_ratio = population_pyramid.men[0] / population_pyramid.women[0]
         return BirthStats(
             fertility_interval=fertility_interval,
-            boys_to_girls = boys_to_girls_ratio,
-            fertility_coefficient = births / fertil_women
+            boys_to_girls=boys_to_girls_ratio,
+            fertility_coefficient=births / fertil_women,
         )

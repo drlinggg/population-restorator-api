@@ -45,7 +45,9 @@ class ExceptionHandlerMiddleware(BaseHTTPMiddleware):
         except APIConnectionError as exc:
             logger.error(f"status: 502, detail: {{content: Couldn't connect to upstream server, info: { {str(exc)} }")
             return JSONResponse(
-                content=GatewayErrorResponse(detail=f"Couldn't connect to upstream server, info: { {str(exc)} }").dict(),
+                content=GatewayErrorResponse(
+                    detail=f"Couldn't connect to upstream server, info: { {str(exc)} }"
+                ).dict(),
                 status_code=502,
             )
 
