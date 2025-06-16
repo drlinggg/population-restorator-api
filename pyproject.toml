@@ -25,11 +25,12 @@ dependencies = [
     "rq (>=2.1.0,<3.0.0)",
     "asyncpg (>=0.30.0,<0.31.0)",
     "multiprocess (>=0.70.17,<0.71.0)",
+    "population_restorator"
 ]
 
 
 [tool.poetry.dependencies]
-population-restorator = { git = "https://github.com/drlinggg/population-restorator.git" }
+population_restorator = { git = "https://github.com/drlinggg/population-restorator.git" }
 
 
 [tool.poetry]
