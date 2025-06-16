@@ -145,8 +145,8 @@ class TerritoriesService:
         territory_id: int,
         year_begin: int,
         years: int,
-        scenario: tp.Literal["NEGATIVE", "NEUTRAL", "POSIVITE"],
-    ) -> dict[str, list[UrbanSocialDistribution]]:
+        scenario: tp.Literal["NEGATIVE", "NEUTRAL", "POSITIVE"],
+    ) -> dict[str, set[UrbanSocialDistribution]]:
         """
         This method extracts from forecast output dbs
         Args:
@@ -164,7 +164,7 @@ class TerritoriesService:
 
         logger = structlog.get_logger()
 
-        buildings_data: dict[str, list[UrbanSocialDistribution]] = {}
+        buildings_data: dict[str, set[UrbanSocialDistribution]] = {}
 
         for db_path in db_paths:
             logger.info(f"trying to get db data, db_path: {{{db_path}}}")
@@ -177,9 +177,9 @@ class TerritoriesService:
                 logger.error(f"got no data from, db_path: {{{db_path}}}")
                 raise ObjectNotFoundError()
 
-            buildings_year_data: list[UrbanSocialDistribution] = []
+            buildings_year_data: set[UrbanSocialDistribution] = set()
             for index, values in year_data.iterrows():
-                buildings_year_data.append(
+                buildings_year_data.add(
                     UrbanSocialDistribution(
                         building_id=values["house_id"],
                         scenario=scenario,
@@ -189,7 +189,7 @@ class TerritoriesService:
                         value=values["men"],
                     )
                 )
-                buildings_year_data.append(
+                buildings_year_data.add(
                     UrbanSocialDistribution(
                         building_id=values["house_id"],
                         scenario=scenario,
@@ -211,7 +211,7 @@ class TerritoriesService:
         territory_id: int,
         year_begin: int,
         years: int,
-        scenario: tp.Literal["NEGATIVE", "NEUTRAL", "POSIVITE"],
+        scenario: tp.Literal["NEGATIVE", "NEUTRAL", "POSITIVE"],
     ):
         """
         This method extracts from forecast output dbs and deletes it from saving api
@@ -222,14 +222,38 @@ class TerritoriesService:
             year_begin: int, first year was saved
             years: int, for how many years saving was
         """
+        buildings_ids: dict[int, set[int]] = {
+            year: set()
+            for year in range(year_begin+1, year_begin+years+1)
+        }
 
-        buildings_data = await self.get_forecasted_data(input_dir, territory_id, year_begin, years, scenario)
+        buildings_db_data = await self.get_forecasted_data(input_dir, territory_id, year_begin, years, scenario)
+        for key, values in buildings_db_data.items():
+            year = next(iter(values)).year
+            for house in values:
+                buildings_ids[year].add(house.building_id)
+
+        building_ids_urban_api: dict[int, set[int]] = {}
+        for index, house in (await self.urban_client.get_houses_from_territories(territory_id)).iterrows():
+            cur_year_houses = set()
+            for cur_year in range(year_begin+1, year_begin+years+1):
+                cur_year_houses.add(
+                    house["house_id"],
+                )
+            for cur_year in range(year_begin + 1, year_begin + years + 1):
+                building_ids_urban_api[cur_year] = cur_year_houses
+
+        for db_path, values in buildings_db_data.items():
+            year = next(iter(values)).year
+            buildings_ids[year] = buildings_ids[year] | building_ids_urban_api[year]
+
 
         logger = structlog.getLogger()
-        for db_path, values in buildings_data.items():
-            logger.info(f"deleting previous forecasted data, db_path: {{ {db_path} }}")
-            await self.saving_client.delete_forecasted_data(values)
+        logger.info(f"deleting previous forecasted data from previous runs")
+        await self.saving_client.delete_forecasted_data(scenario, buildings_ids)
 
+        for db_path in buildings_db_data.keys():
+            logger.info(f"deleting previous forecasted data, db_path: {{ {db_path} }}")
             try:
                 os_remove(db_path)
             except OSError as e:
@@ -242,7 +266,7 @@ class TerritoriesService:
         territory_id: int,
         year_begin: int,
         years: int,
-        scenario: tp.Literal["NEGATIVE", "NEUTRAL", "POSIVITE"],
+        scenario: tp.Literal["NEGATIVE", "NEUTRAL", "POSITIVE"],
     ):
         """
         This method extracts from forecast output dbs and posts it to saving api
@@ -267,7 +291,7 @@ class TerritoriesService:
         territory_id: int,
         year_begin: int,
         years: int,
-        scenario: tp.Literal["NEGATIVE", "NEUTRAL", "POSIVITE"],
+        scenario: tp.Literal["NEGATIVE", "NEUTRAL", "POSITIVE"],
         from_scratch: bool,
     ) -> tp.NoReturn:
         """

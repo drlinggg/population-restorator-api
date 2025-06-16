@@ -257,9 +257,7 @@ class UrbanClient(BaseClient):
 
         index=house_id
         house_id (int): id of current house
-        todo mb add name (str)
         territory_id (int): id of territory which contains current house
-        living_area (float):
         geometry (geojson) : coords of current territory
 
         /todo table example here/
@@ -291,7 +289,7 @@ class UrbanClient(BaseClient):
         internal_houses_df = pd.DataFrame(data)
 
         # formatting
-        columns = ["house_id", "territory_id", "living_area", "geometry"]
+        columns = ["house_id", "territory_id", "living_area"]
         formatted_houses_df = pd.DataFrame(columns=columns)
         formatted_houses_df.set_index("house_id", drop=False, inplace=True)
 
@@ -301,23 +299,19 @@ class UrbanClient(BaseClient):
                 living_area_official = i["properties"]["building"]["properties"]["living_area_official"]
             except KeyError as exc:
                 logger.error(f"house with id {i['properties']['building']['id']} has no living_area property")
-                logger.error(exc)
-                logger.error(i)
+                logger.error(exc, i)
                 continue
             except TypeError as exc:
                 logger.error(
                     f"something wrong with house properties territory_parent_id: {territory_parent_id} house_id: {i['properties']['territories'][0]['id']}"
                 )
-                logger.error(exc)
-                logger.error(i)
+                logger.error(exc, i)
                 continue
             formatted_houses_df.loc[i["properties"]["building"]["id"]] = {
-                # "name": i["properties"]["name"],
                 "house_id": i["properties"]["building"]["id"],
                 "territory_id": i["properties"]["territories"][0]["id"],
                 # prefering living_area_modeled than living_are_official, if none of this available -> 0
                 "living_area": living_area_modeled if living_area_modeled is not None else (living_area_official or 0),
-                "geometry": i["geometry"],
             }
 
         return formatted_houses_df

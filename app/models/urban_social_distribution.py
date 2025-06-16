@@ -3,7 +3,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 
-class UrbanSocialDistribution(BaseModel):
+class UrbanSocialDistribution(BaseModel, frozen=True):
     """
     This model is used to be forecasted in forecast function
     Used to be sent to saving_api as a list[UrbanSocDistr] result of forecast end-point

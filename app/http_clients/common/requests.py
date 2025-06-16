@@ -37,8 +37,7 @@ async def _handle_request(
         ) as response:
             logger.info(
                 f"Sent request: {{method: {method}, url: {url}, "
-                f"params: {params}, headers: {headers}, "
-                f"json: {json}, status: {response.status}}}"
+                f"params: {params}, headers: {headers}, status: {response.status}}}"
             )
             logger.debug(f"Response headers: {response.headers}")
 
@@ -81,5 +80,6 @@ async def handle_delete_request(
     params: dict[str, Any] | None = None,
     headers: dict[str, Any] | None = None,
     session: aiohttp.ClientSession | None = None,
+    json: dict | None = None,
 ) -> dict | None:
-        return await _handle_request("DELETE", url, params, headers, session=session)
+        return await _handle_request("DELETE", url, params, headers, session=session, json=json)

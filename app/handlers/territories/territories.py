@@ -127,7 +127,7 @@ async def restore(
     territory_id: int,
     year_begin: int = Query(...),
     year_end: int = Query(...),
-    scenario: Literal["NEGATIVE", "NEUTRAL", "POSIVITE"] = "NEUTRAL",
+    scenario: Literal["NEGATIVE", "NEUTRAL", "POSITIVE"] = "NEUTRAL",
     from_scratch: bool = Query(True, description="recalculate previous steps before restoring"),
 ):
     # todo desc

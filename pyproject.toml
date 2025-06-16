@@ -1,6 +1,6 @@
 [project]
 name = "population-restorator-api"
-version = "1.0.0"
+version = "1.0.1 blue mountain"
 description = "todo"
 authors = [
     {name = "Banakh Andrei",email = "uuetsukeu@mail.ru"}
@@ -25,16 +25,12 @@ dependencies = [
     "rq (>=2.1.0,<3.0.0)",
     "asyncpg (>=0.30.0,<0.31.0)",
     "multiprocess (>=0.70.17,<0.71.0)",
-    "population-restorator"
 ]
 
 
 [tool.poetry.dependencies]
 population-restorator = { git = "https://github.com/drlinggg/population-restorator.git" }
 
-#dev
-#[tool.poetry.dependencies]
-#population-restorator = { path = "./population-restorator", develop = true }
 
 [tool.poetry]
 packages = [{ include = "app" }]
