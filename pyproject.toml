@@ -1,6 +1,6 @@
 [project]
 name = "population-restorator-api"
-version = "1.0.1 blue mountain"
+version = "1.0.1"
 description = "todo"
 authors = [
     {name = "Banakh Andrei",email = "uuetsukeu@mail.ru"}
