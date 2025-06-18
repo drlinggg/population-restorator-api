@@ -13,5 +13,5 @@ class UrbanSocialDistribution(BaseModel, frozen=True):
     scenario: Literal["NEGATIVE", "NEUTRAL", "POSITIVE"]
     year: int = Field(ge=1900)
     sex: Literal["MALE", "FEMALE"]
-    age: int = Field(ge=0)
+    age: int = Field(ge=0, le=100)
     value: int = Field(ge=0)

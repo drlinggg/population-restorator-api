@@ -54,12 +54,12 @@ class JobNotFoundErrorResponse(BaseModel):
 
 
 class UrbanSocialDistributionPost(BaseModel):
-    building_id: int
+    building_id: int = Field(ge=0)
     scenario: Literal["NEGATIVE", "NEUTRAL", "POSITIVE"]
-    year: int
+    year: int = Field(ge=1900)
     sex: Literal["MALE", "FEMALE"]
-    age: int
-    value: int
+    age: int = Field(ge=0, le=100)
+    value: int = Field(ge=0)
 
     @classmethod
     def from_model(cls, model: UrbanSocialDistribution):
