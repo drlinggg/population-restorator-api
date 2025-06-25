@@ -1,0 +1,44 @@
+app:
+  host: "0.0.0.0"
+  port: 8000
+  debug: 1
+  name: "population-restorator-api"
+population_restorator:
+  fertility:
+    start: 18
+    end: 45
+  working_dirs:
+    divide_working_db_path: "./test.db"
+    forecast_working_dir_path: "./calculation_dbs/"
+logging:
+  level: "INFO"
+  files:
+    - filename: "logs/info.log"
+      level: "INFO"
+    - filename: "logs/error.log"
+      level: "ERROR"
+    - filename: "logs/debug.log"
+      level: "DEBUG"
+redis_queue:
+  host: "localhost"
+  port: 6379
+  db: 0
+  queue_name: "default"
+urban_api:
+  host: "https://urban-api.idu.kanootoko.org"
+  port: 443
+  api_key: null
+  const_request_params:
+    population_indicator: 1
+    house_type: 4
+    population_value_type_indicator: "real"
+socdemo_api:
+  host: "http://10.32.1.108:8000"
+  port: 443
+  api_key: null
+  const_request_params:
+    population_pyramid_indicator: 2
+saving_api:
+  host: "http://10.32.1.58:8000"
+  port: 443
+  api_key: null
